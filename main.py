@@ -30,8 +30,8 @@ class Invoice(Base):
     __tablename__ = "invoices"
     id = Column(Integer, primary_key=True)
     filename = Column(String)
-    fecha = Column(String)
-    proveedor = Column(String)
+    fecha = Column(String, index=True)
+    proveedor = Column(String, index=True)
     concepto = Column(String)
     folio = Column(String)
     subtotal = Column(Float)
@@ -40,7 +40,7 @@ class Invoice(Base):
     metodo_extraccion = Column(String)
     confianza_proveedor = Column(Float)
     url = Column(String)
-    uploaded_at = Column(DateTime, default=datetime.utcnow)
+    uploaded_at = Column(DateTime, default=datetime.utcnow, index=True)
 
 
 Base.metadata.create_all(bind=engine)

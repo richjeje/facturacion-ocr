@@ -24,3 +24,4 @@ easyocr
 python-docx
 python-pptx
 slowapi
+redis

@@ -105,14 +105,16 @@ Post-implementación de features, se recomienda un plan de 4 semanas para pulir 
 - Instalar y configurar Black, Flake8, MyPy, pre-commit hooks.
 - Formatear código y detectar issues iniciales.
 
-### Fase 2: Pulido de Código y Seguridad (1 semana)
-- Agregar type hints completos.
-- Reemplazar prints con logging.
-- Implementar rate limiting, sanitización de inputs, encriptación básica.
+### Fase 2: Pulido de Código y Seguridad (Completada - 1 semana)
+- Agregados type hints completos en funciones clave.
+- Reemplazados prints con logging estructurado.
+- Implementado rate limiting (slowapi), sanitización de filenames.
 
-### Fase 3: Optimizaciones de Rendimiento (0.5 semanas)
-- Índices en BD, caching con Redis, optimizar queries.
-- Limpieza automática de archivos temp.
+### Fase 3: Optimizaciones de Rendimiento (Completada - 0.5 semanas)
+- Agregados índices en BD (fecha, proveedor, uploaded_at).
+- Implementado caching con Redis en dashboard (5 min TTL).
+- Optimizadas queries (límite 100 registros recientes).
+- Agregada tarea Celery para limpieza automática de archivos temp >24h.
 
 ### Fase 4: Tests y CI/CD (1 semana)
 - Expandir tests de integración, configurar GitHub Actions.

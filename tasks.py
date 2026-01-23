@@ -35,6 +35,19 @@ def process_file_task(self, file_path, filename, client_name):
     finally:
         # Limpiar archivo temp si existe
         import os
-
         if os.path.exists(file_path):
             os.remove(file_path)
+
+@celery_app.task
+def cleanup_temp_files():
+    """Limpia archivos temp mayores a 24h."""
+    import os
+    import time
+    temp_dir = "."
+    now = time.time()
+    for file in os.listdir(temp_dir):
+        if file.startswith("temp_"):
+            path = os.path.join(temp_dir, file)
+            if os.path.isfile(path) and (now - os.path.getmtime(path)) > 86400:  # 24h
+                os.remove(path)
+                logger.info(f"Limpiado archivo temp: {file}")

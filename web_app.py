@@ -20,6 +20,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+import redis
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -82,6 +83,9 @@ app = FastAPI()
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
+
+# Redis for caching
+redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
 
 # Mount static files for frontend
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -208,40 +212,36 @@ def api_get_results(
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
-def dashboard(
-    username: str = Depends(verify_token), db: SessionLocal = Depends(get_db)
-):
-    invoices = db.query(Invoice).all()
-    # Generate Plotly charts
-    import plotly.graph_objects as go
-    from plotly.utils import PlotlyJSONEncoder
-    import json
+def dashboard(username: str = Depends(verify_token), db: SessionLocal = Depends(get_db)):
+    # Check cache
+    cache_key = "dashboard_data"
+    cached = redis_client.get(cache_key)
+    if cached:
+        charts = json.loads(cached)
+    else:
+        invoices = db.query(Invoice).order_by(Invoice.fecha.desc()).limit(100).all()  # Optimize: limit to recent 100
+        # Generate Plotly charts
+        import plotly.graph_objects as go
+        from plotly.utils import PlotlyJSONEncoder
 
-    # Gastos por proveedor
-    proveedores = {}
-    for inv in invoices:
-        proveedores[inv.proveedor] = proveedores.get(inv.proveedor, 0) + inv.total
-    fig1 = go.Figure(
-        data=[go.Bar(x=list(proveedores.keys()), y=list(proveedores.values()))]
-    )
-    fig1.update_layout(title="Gastos por Proveedor")
+        # Gastos por proveedor
+        proveedores = {}
+        for inv in invoices:
+            proveedores[inv.proveedor] = proveedores.get(inv.proveedor, 0) + inv.total
+        fig1 = go.Figure(data=[go.Bar(x=list(proveedores.keys()), y=list(proveedores.values()))])
+        fig1.update_layout(title="Gastos por Proveedor")
 
-    # Errores por tipo (simulado, ya que no hay campo error, usar confianza baja)
-    errores = sum(1 for inv in invoices if inv.confianza_proveedor < 70)
-    fig2 = go.Figure(
-        data=[
-            go.Pie(
-                labels=["Exitosos", "Errores"],
-                values=[len(invoices) - errores, errores],
-            )
-        ]
-    )
-    fig2.update_layout(title="Facturas Procesadas")
+        # Errores por tipo (simulado, ya que no hay campo error, usar confianza baja)
+        errores = sum(1 for inv in invoices if inv.confianza_proveedor < 70)
+        fig2 = go.Figure(data=[go.Pie(labels=["Exitosos", "Errores"], values=[len(invoices) - errores, errores])])
+        fig2.update_layout(title="Facturas Procesadas")
 
-    charts = {
-        "gastos": json.dumps(fig1, cls=PlotlyJSONEncoder),
-        "errores": json.dumps(fig2, cls=PlotlyJSONEncoder),
-    }
+        charts = {
+            "gastos": json.dumps(fig1, cls=PlotlyJSONEncoder),
+            "errores": json.dumps(fig2, cls=PlotlyJSONEncoder)
+        }
+        # Cache for 5 min
+        redis_client.setex(cache_key, 300, json.dumps(charts))
 
     html = f"""
     <!DOCTYPE html>
