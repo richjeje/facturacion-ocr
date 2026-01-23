@@ -1,6 +1,7 @@
 import pytest
 from processor import process_invoice_text
 
+
 def test_process_valid_invoice():
     texto = """Factura de prueba
 Fecha: 15/08/2024
@@ -22,6 +23,7 @@ URL: https://example.com"""
     assert resultado["Total"] == 116.0
     assert "example.com" in resultado["URL"]
 
+
 def test_process_invalid_invoice():
     texto = "Texto sin datos válidos"
 
@@ -29,12 +31,14 @@ def test_process_invalid_invoice():
 
     assert resultado is None  # Debería omitirse por falta de datos
 
+
 def test_process_omit_herrera():
     texto = "HERRERA MOTORS DE AGUASCALIENTES Factura"
 
     resultado = process_invoice_text(texto, "Texto")
 
     assert resultado is None  # Debería omitirse
+
 
 def test_process_low_confidence():
     texto = "Proveedor desconocido XYZ"

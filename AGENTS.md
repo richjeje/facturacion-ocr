@@ -98,6 +98,33 @@ Este archivo documenta el trabajo realizado por el asistente de IA en la refacto
 - `.gitignore` para excluir venv, outputs, etc.
 - Archivos principales versionados.
 
+## Plan de Ajustes Finales para Pulido
+Post-implementación de features, se recomienda un plan de 4 semanas para pulir detalles:
+
+### Fase 1: Preparación y Herramientas (1 semana)
+- Instalar y configurar Black, Flake8, MyPy, pre-commit hooks.
+- Formatear código y detectar issues iniciales.
+
+### Fase 2: Pulido de Código y Seguridad (1 semana)
+- Agregar type hints completos.
+- Reemplazar prints con logging.
+- Implementar rate limiting, sanitización de inputs, encriptación básica.
+
+### Fase 3: Optimizaciones de Rendimiento (0.5 semanas)
+- Índices en BD, caching con Redis, optimizar queries.
+- Limpieza automática de archivos temp.
+
+### Fase 4: Tests y CI/CD (1 semana)
+- Expandir tests de integración, configurar GitHub Actions.
+- Agregar coverage >80%.
+
+### Fase 5: Documentación y Deploy (0.5 semanas)
+- Actualizar README, crear scripts de deploy (Docker Compose).
+- Agregar monitoreo con Sentry.
+
+### Fase 6: Validación Final (0.5 semanas)
+- Full test suite, escaneo de seguridad, tests de performance.
+
 ## Estado Final
 - Código modular, testeado, documentado.
 - Listo para deploy (Docker, Vercel).

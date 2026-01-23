@@ -1,14 +1,33 @@
 import re
 import logging
 from fuzzywuzzy import fuzz
-from .config import EMPRESAS_CONOCIDAS, obtener_empresas_por_clasificacion, REGEX_FECHAS, REGEX_FECHA_TEXTO, FOLIO_PATTERNS, FOLIO_PATTERNS_GENERAL, FIX_ADDRESSES, REGEX_SUBTOTALS, REGEX_TOTALS
-from .utils import clean_date, clean_amount, convertir_fecha_texto, debe_omitir_factura, ProcessingError, ValidationError
+from .config import (
+    EMPRESAS_CONOCIDAS,
+    obtener_empresas_por_clasificacion,
+    REGEX_FECHAS,
+    REGEX_FECHA_TEXTO,
+    FOLIO_PATTERNS,
+    FOLIO_PATTERNS_GENERAL,
+    FIX_ADDRESSES,
+    REGEX_SUBTOTALS,
+    REGEX_TOTALS,
+)
+from .utils import (
+    clean_date,
+    clean_amount,
+    convertir_fecha_texto,
+    debe_omitir_factura,
+    ValidationError,
+)
 
 logger = logging.getLogger(__name__)
 
+
 def process_invoice_text(texto, metodo_extraccion):
-    """Procesa el texto extraído de una factura y devuelve un diccionario con los datos parseados."""
-    if debe_omitir_factura(texto): return None
+    """Procesa el texto extraído de una factura y devuelve un diccionario
+    con los datos parseados."""
+    if debe_omitir_factura(texto):
+        return None
 
     fecha, folio, subtotal, total, iva = "", "", 0.0, 0.0, 0.0
 
@@ -23,9 +42,9 @@ def process_invoice_text(texto, metodo_extraccion):
             if match:
                 fecha = match.group()
                 if patron == r"\d{1,2}-\d{1,2}-\d{4}":
-                    fecha = fecha.replace('-', '/')
+                    fecha = fecha.replace("-", "/")
                 elif patron == r"\d{4}-\d{1,2}-\d{1,2}":
-                    parts = fecha.split('-')
+                    parts = fecha.split("-")
                     fecha = f"{parts[2].zfill(2)}/{parts[1].zfill(2)}/{parts[0]}"
                 fecha = clean_date(fecha)
                 break
@@ -43,13 +62,13 @@ def process_invoice_text(texto, metodo_extraccion):
         match_folio = re.search(r"Fo.*Intern.*:\s*([A-Z0-9\s-]+)", texto, re.IGNORECASE)
         if match_folio:
             folio_raw = match_folio.group(1)
-            folio = re.sub(r'[^A-Z0-9-]', '', folio_raw).strip()
+            folio = re.sub(r"[^A-Z0-9-]", "", folio_raw).strip()
             if len(folio) > 8:
                 folio = folio[:8]
     elif proveedor_temp == "SERVICIO MAPRO SA DE CV":
         match_folio = re.search(r"Folio:\s*([A-Z0-9?]+)", texto, re.IGNORECASE)
         if match_folio:
-            folio = match_folio.group(1).replace('?', '2')
+            folio = match_folio.group(1).replace("?", "2")
     elif proveedor_temp in ["TIENDAS FIX", "FIX", "MULTIHERRAMIENTAS DEL BAJIO"]:
         match_folio = re.search(r"Folio[^f]*(\d{5})", texto, re.IGNORECASE)
         if match_folio:
@@ -68,26 +87,65 @@ def process_invoice_text(texto, metodo_extraccion):
                 folio = matches[0]
     elif proveedor_temp in FOLIO_PATTERNS:
         match_folio = re.search(FOLIO_PATTERNS[proveedor_temp], texto)
-        if match_folio: folio = match_folio.group(1)
+        if match_folio:
+            folio = match_folio.group(1)
 
     if not folio:
         for patron in FOLIO_PATTERNS_GENERAL:
             matches = re.findall(patron, texto, re.IGNORECASE)
             for m in matches:
-                full_match_str = patron.replace("([0-9]+)", re.escape(m)) if "([0-9]+)" in patron else patron.replace("(\\d{5,10})", re.escape(m))
+                full_match_str = (
+                    patron.replace("([0-9]+)", re.escape(m))
+                    if "([0-9]+)" in patron
+                    else patron.replace("(\\d{5,10})", re.escape(m))
+                )
                 full_match = re.search(full_match_str, texto, re.IGNORECASE)
                 if full_match:
                     start = max(0, full_match.start() - 50)
                     end = min(len(texto), full_match.end() + 50)
                     context = texto[start:end].lower()
-                    if "c.p." in context or "codigo postal" in context or "código postal" in context or "cp" in context or "postal" in context:
+                    if (
+                        "c.p." in context
+                        or "codigo postal" in context
+                        or "código postal" in context
+                        or "cp" in context
+                        or "postal" in context
+                    ):
                         continue
-                    if "fiscal" not in full_match.group(0).lower() and "serle" not in full_match.group(0).lower() and "flacal" not in full_match.group(0).lower() and len(m) > 2 and m.lower() not in ["no", "folio", "fecha", "de", "fc", "serie", "cag", "fao", "fa", "a", "fpn", "sla", "00007104", "2024", "2023", "2025"] and not m.startswith("0000"):
-                        if re.match(r"\d{1,2}/\d{1,2}/\d{4}", m) or re.match(r"\d{4}-\d{1,2}-\d{1,2}", m):
+                    if (
+                        "fiscal" not in full_match.group(0).lower()
+                        and "serle" not in full_match.group(0).lower()
+                        and "flacal" not in full_match.group(0).lower()
+                        and len(m) > 2
+                        and m.lower()
+                        not in [
+                            "no",
+                            "folio",
+                            "fecha",
+                            "de",
+                            "fc",
+                            "serie",
+                            "cag",
+                            "fao",
+                            "fa",
+                            "a",
+                            "fpn",
+                            "sla",
+                            "00007104",
+                            "2024",
+                            "2023",
+                            "2025",
+                        ]
+                        and not m.startswith("0000")
+                    ):
+                        if re.match(r"\d{1,2}/\d{1,2}/\d{4}", m) or re.match(
+                            r"\d{4}-\d{1,2}-\d{1,2}", m
+                        ):
                             continue
                         folio = m
                         break
-            if folio: break
+            if folio:
+                break
 
     # --- Extraer Subtotal ---
     for patron in REGEX_SUBTOTALS:
@@ -118,11 +176,14 @@ def process_invoice_text(texto, metodo_extraccion):
     proveedor, tipo, max_ratio = "DESCONOCIDA", "DESCONOCIDA", 0
     for emp in EMPRESAS_CONOCIDAS:
         ratio = fuzz.partial_ratio(emp, texto_upper)
-        if ratio > max_ratio: max_ratio, proveedor = ratio, emp
+        if ratio > max_ratio:
+            max_ratio, proveedor = ratio, emp
     if max_ratio >= 50:
         clasificaciones = obtener_empresas_por_clasificacion()
         for cat, emps in clasificaciones.items():
-            if proveedor in emps: tipo = cat.upper(); break
+            if proveedor in emps:
+                tipo = cat.upper()
+                break
 
     # Merge FIX
     if proveedor == "FIX":
@@ -137,13 +198,15 @@ def process_invoice_text(texto, metodo_extraccion):
             break
 
     if max_ratio < 60:
-        logger.warning(f"Confianza baja en proveedor ({max_ratio}%): {proveedor}, omitiendo factura.")
+        logger.warning(
+            f"Confianza baja en proveedor ({max_ratio}%): {proveedor}, omitiendo factura."
+        )
         return None
     if max_ratio < 70:
         logger.warning(f"Baja confianza en proveedor ({max_ratio}%): {proveedor}")
 
     # --- Extraer URL ---
-    url_match = re.search(r'https?://[^\s]+', texto)
+    url_match = re.search(r"https?://[^\s]+", texto)
     url = url_match.group(0) if url_match else ""
 
     # --- Validaciones ---
@@ -156,8 +219,19 @@ def process_invoice_text(texto, metodo_extraccion):
     if proveedor == "DESCONOCIDA":
         raise ValidationError("Proveedor no identificado")
 
-    logger.info(f"Procesamiento exitoso: Proveedor {proveedor}, Folio {folio}, Total {total}")
+    logger.info(
+        f"Procesamiento exitoso: Proveedor {proveedor}, Folio {folio}, Total {total}"
+    )
 
-    return {"Fecha": fecha, "Proveedor": proveedor, "Concepto": tipo,
-            "Folio": folio, "Subtotal": subtotal, "IVA": iva, "Total": total,
-            "Metodo_Extraccion": metodo_extraccion, "Confianza_Proveedor": max_ratio, "URL": url}
+    return {
+        "Fecha": fecha,
+        "Proveedor": proveedor,
+        "Concepto": tipo,
+        "Folio": folio,
+        "Subtotal": subtotal,
+        "IVA": iva,
+        "Total": total,
+        "Metodo_Extraccion": metodo_extraccion,
+        "Confianza_Proveedor": max_ratio,
+        "URL": url,
+    }

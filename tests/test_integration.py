@@ -1,11 +1,6 @@
-import pytest
-import os
-from main import process_files  # Assuming we can call a function from main, but since it's script, maybe mock
-
-# For integration, perhaps test the processor with extractor
-
-from extractor import extract_text
+# For integration, test the processor with extractor
 from processor import process_invoice_text
+
 
 def test_integration_full_process():
     # Simulate reading a text file as if extracted

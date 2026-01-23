@@ -1,8 +1,15 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from extractor import extract_text_from_pdf, extract_text_from_image, extract_text, extract_text_from_docx, extract_text_from_pptx
+from extractor import (
+    extract_text_from_pdf,
+    extract_text_from_image,
+    extract_text,
+    extract_text_from_docx,
+    extract_text_from_pptx,
+)
 
-@patch('extractor.pdfplumber')
+
+@patch("extractor.pdfplumber")
 def test_extract_pdf_with_text(mock_pdfplumber):
     mock_pdf = MagicMock()
     mock_page = MagicMock()
@@ -15,8 +22,9 @@ def test_extract_pdf_with_text(mock_pdfplumber):
     assert texto == "Texto de la factura\n"
     assert metodo == "Texto"
 
-@patch('extractor.convert_from_path')
-@patch('extractor.pdfplumber')
+
+@patch("extractor.convert_from_path")
+@patch("extractor.pdfplumber")
 def test_extract_pdf_ocr_fallback(mock_pdfplumber, mock_convert):
     mock_pdf = MagicMock()
     mock_page = MagicMock()
@@ -27,20 +35,22 @@ def test_extract_pdf_ocr_fallback(mock_pdfplumber, mock_convert):
     mock_img = MagicMock()
     mock_convert.return_value = [mock_img]
 
-    with patch('extractor.pytesseract.image_to_string', return_value="Texto OCR"):
+    with patch("extractor.pytesseract.image_to_string", return_value="Texto OCR"):
         texto, metodo = extract_text_from_pdf("test.pdf")
 
         assert "Texto OCR" in texto
         assert metodo == "OCR"
 
-@patch('extractor.easyocr.Reader')
+
+@patch("extractor.easyocr.Reader")
 def test_extract_image_easyocr(mock_reader):
     mock_reader_instance = MagicMock()
     mock_reader_instance.readtext.return_value = ["Texto EasyOCR"]
     mock_reader.return_value = mock_reader_instance
 
-    with patch('extractor.Image.open') as mock_open, \
-         patch('extractor.np.array') as mock_array:
+    with patch("extractor.Image.open") as mock_open, patch(
+        "extractor.np.array"
+    ) as mock_array:
         mock_img = MagicMock()
         mock_open.return_value = mock_img
         mock_array.return_value = "img_array"
@@ -50,7 +60,8 @@ def test_extract_image_easyocr(mock_reader):
         assert "Texto EasyOCR" in texto
         assert metodo == "EasyOCR"
 
-@patch('extractor.Document')
+
+@patch("extractor.Document")
 def test_extract_docx(mock_document):
     mock_doc = MagicMock()
     mock_para = MagicMock()
@@ -63,7 +74,8 @@ def test_extract_docx(mock_document):
     assert texto == "Texto de prueba\n"
     assert metodo == "DOCX"
 
-@patch('extractor.Presentation')
+
+@patch("extractor.Presentation")
 def test_extract_pptx(mock_presentation):
     mock_prs = MagicMock()
     mock_slide = MagicMock()

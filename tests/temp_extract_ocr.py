@@ -3,7 +3,7 @@ import cv2
 import pytesseract
 import numpy as np
 
-images = convert_from_path('imagenes/PFIX.pdf')
+images = convert_from_path("imagenes/PFIX.pdf")
 texto = ""
 for img in images:
     img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2GRAY)

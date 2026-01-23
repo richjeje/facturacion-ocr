@@ -1,11 +1,11 @@
-import pytest
 from fastapi.testclient import TestClient
 from web_app import app
 from unittest.mock import patch
 
 client = TestClient(app)
 
-@patch('web_app.SessionLocal')
+
+@patch("web_app.SessionLocal")
 def test_api_upload(mock_db):
     # Mock DB
     mock_session = mock_db.return_value

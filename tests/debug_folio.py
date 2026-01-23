@@ -6,7 +6,7 @@ import numpy as np
 from fuzzywuzzy import fuzz
 
 # Load image
-img_pil = Image.open('imagenes/Img_20251003180404_008.jpeg')
+img_pil = Image.open("imagenes/Img_20251003180404_008.jpeg")
 img_cv = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
 img_cv = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
 img_cv = cv2.threshold(img_cv, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
@@ -57,10 +57,33 @@ else:
         for m in matches:
             full_match_str = patron.replace("([0-9]+)", re.escape(m))
             full_match = re.search(full_match_str, texto, re.IGNORECASE)
-            if full_match and "fiscal" not in full_match.group(0).lower() and "serle" not in full_match.group(0).lower() and "flacal" not in full_match.group(0).lower() and len(m) > 2 and m.lower() not in ["no", "folio", "fecha", "de", "fc", "serie", "cag", "fao", "fa", "a", "fpn", "sla", "00007104"]:
+            if (
+                full_match
+                and "fiscal" not in full_match.group(0).lower()
+                and "serle" not in full_match.group(0).lower()
+                and "flacal" not in full_match.group(0).lower()
+                and len(m) > 2
+                and m.lower()
+                not in [
+                    "no",
+                    "folio",
+                    "fecha",
+                    "de",
+                    "fc",
+                    "serie",
+                    "cag",
+                    "fao",
+                    "fa",
+                    "a",
+                    "fpn",
+                    "sla",
+                    "00007104",
+                ]
+            ):
                 folio = m
                 print(f"Found folio: {folio}")
                 break
-        if folio: break
+        if folio:
+            break
 
 print(f"Final folio: {folio}")
