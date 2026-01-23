@@ -87,11 +87,11 @@ Este archivo documenta el trabajo realizado por el asistente de IA en la refacto
 - 6 workers simultáneos.
 - Timeouts 10-15 min.
 
-#### Feature 5: Dashboard de Reportes (Planificada)
-- Plotly para gráficos.
-- Filtros avanzados.
-- Export PDF.
-- WebSockets para real-time.
+#### Feature 5: Dashboard de Reportes (Completada)
+- Plotly para gráficos de gastos y errores.
+- Filtros avanzados (fechas).
+- Export PDF con reportlab.
+- WebSockets para real-time updates.
 
 ## Repositorio Creado
 - `git init` y commit inicial.

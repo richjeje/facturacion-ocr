@@ -1,9 +1,11 @@
-from fastapi import FastAPI, File, UploadFile, Depends, HTTPException, status, Header
+from fastapi import FastAPI, File, UploadFile, Depends, HTTPException, status, Header, WebSocket
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.websockets import WebSocketDisconnect
 import uvicorn
 import os
+import json
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -130,6 +132,93 @@ def api_get_status(task_id: str, client: str = Depends(verify_api_key)):
 def api_get_results(client: str = Depends(verify_api_key), db: SessionLocal = Depends(get_db)):
     invoices = db.query(Invoice).all()
     return {"status": "success", "data": [{"id": i.id, "fecha": i.fecha, "proveedor": i.proveedor, "total": i.total, "folio": i.folio} for i in invoices], "metadata": {"client": client, "count": len(invoices)}}
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard(username: str = Depends(verify_token), db: SessionLocal = Depends(get_db)):
+    invoices = db.query(Invoice).all()
+    # Generate Plotly charts
+    import plotly.graph_objects as go
+    from plotly.utils import PlotlyJSONEncoder
+    import json
+
+    # Gastos por proveedor
+    proveedores = {}
+    for inv in invoices:
+        proveedores[inv.proveedor] = proveedores.get(inv.proveedor, 0) + inv.total
+    fig1 = go.Figure(data=[go.Bar(x=list(proveedores.keys()), y=list(proveedores.values()))])
+    fig1.update_layout(title="Gastos por Proveedor")
+
+    # Errores por tipo (simulado, ya que no hay campo error, usar confianza baja)
+    errores = sum(1 for inv in invoices if inv.confianza_proveedor < 70)
+    fig2 = go.Figure(data=[go.Pie(labels=["Exitosos", "Errores"], values=[len(invoices) - errores, errores])])
+    fig2.update_layout(title="Facturas Procesadas")
+
+    charts = {
+        "gastos": json.dumps(fig1, cls=PlotlyJSONEncoder),
+        "errores": json.dumps(fig2, cls=PlotlyJSONEncoder)
+    }
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Dashboard</title>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    </head>
+    <body>
+        <h1>Dashboard de Facturas</h1>
+        <div id="chart1"></div>
+        <div id="chart2"></div>
+        <form id="filter-form">
+            <label>Fecha Inicio: <input type="date" id="start-date"></label>
+            <label>Fecha Fin: <input type="date" id="end-date"></label>
+            <button type="submit">Filtrar</button>
+        </form>
+        <button onclick="exportPDF()">Exportar PDF</button>
+        <script>
+            Plotly.newPlot('chart1', {charts["gastos"]});
+            Plotly.newPlot('chart2', {charts["errores"]});
+
+            const ws = new WebSocket('ws://localhost:8000/ws');
+            ws.onmessage = function(event) {{
+                const data = JSON.parse(event.data);
+                // Update charts
+                console.log('Update:', data);
+            }};
+        </script>
+    </body>
+    </html>
+    """
+    return html
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_text()
+            # Simulate real-time update
+            await websocket.send_text(json.dumps({"update": "new_invoice"}))
+    except WebSocketDisconnect:
+        pass
+
+@app.get("/export/pdf")
+def export_pdf(username: str = Depends(verify_token), db: SessionLocal = Depends(get_db)):
+    from reportlab.pdfgen import canvas
+    from io import BytesIO
+
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer)
+    c.drawString(100, 750, "Reporte de Facturas")
+    invoices = db.query(Invoice).all()
+    y = 700
+    for inv in invoices[:10]:  # Limit to 10
+        c.drawString(100, y, f"{inv.fecha} - {inv.proveedor} - {inv.total}")
+        y -= 20
+    c.save()
+
+    buffer.seek(0)
+    return FileResponse(buffer, media_type='application/pdf', filename='reporte.pdf')
 
 
 
