@@ -3,6 +3,8 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 
+logger = logging.getLogger(__name__)
+
 
 # --- Cargar configuración ---
 def load_config():
@@ -19,10 +21,16 @@ def load_config():
         print("companies.json no encontrado, usando fallbacks")
 
     try:
-        with open("patterns.json", "r", encoding="utf-8") as f:
+        with open('companies.json', 'r', encoding='utf-8') as f:
             config_data.update(json.load(f))
     except FileNotFoundError:
-        print("patterns.json no encontrado, usando fallbacks")
+        logger.warning("companies.json no encontrado, usando fallbacks")
+
+    try:
+        with open('patterns.json', 'r', encoding='utf-8') as f:
+            config_data.update(json.load(f))
+    except FileNotFoundError:
+        logger.warning("patterns.json no encontrado, usando fallbacks")
 
     return config_data
 

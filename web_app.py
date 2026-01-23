@@ -15,6 +15,11 @@ from fastapi.websockets import WebSocketDisconnect
 import uvicorn
 import os
 import json
+from typing import List, Dict, Any
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -72,7 +77,11 @@ SECRET_KEY = "your-secret-key"
 ALGORITHM = "HS256"
 security = HTTPBearer()
 
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # Mount static files for frontend
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -124,16 +133,22 @@ def read_root():
 
 
 @app.post("/api/upload")
+@limiter.limit("100/minute")
 def api_upload_file(
     file: UploadFile = File(...), client: str = Depends(verify_api_key)
-):
+) -> Dict[str, Any]:
+    # Sanitize filename
+    import re
+    safe_filename = re.sub(r'[^\w\.-]', '_', file.filename)
+    if len(safe_filename) > 100:
+        safe_filename = safe_filename[:100]
+
     # Log API call
     import logging
-
-    logging.info(f"API upload from client: {client}, file: {file.filename}")
+    logging.info(f"API upload from client: {client}, file: {safe_filename}")
 
     # Save file temporarily
-    temp_path = f"temp_{file.filename}"
+    temp_path = f"temp_{safe_filename}"
     with open(temp_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
@@ -171,9 +186,10 @@ def api_get_status(task_id: str, client: str = Depends(verify_api_key)):
 
 
 @app.get("/api/results")
+@limiter.limit("200/minute")
 def api_get_results(
     client: str = Depends(verify_api_key), db: SessionLocal = Depends(get_db)
-):
+) -> Dict[str, Any]:
     invoices = db.query(Invoice).all()
     return {
         "status": "success",

@@ -1,5 +1,6 @@
 import re
 import pandas as pd
+from typing import Optional
 from .config import MESES_MAP, REGEX_FECHA_TEXTO
 
 
@@ -32,9 +33,22 @@ def debe_omitir_factura(texto: str) -> bool:
         bool: True si debe omitirse.
     """
     return "HERRERA MOTORS DE AGUASCALIENTES" in texto.upper()
+    """Verifica si la factura debe omitirse (ej. proveedores excluidos).
+
+    Args:
+        texto (str): Texto de la factura.
+
+    Returns:
+        bool: True si debe omitirse.
+    """
+    return "HERRERA MOTORS DE AGUASCALIENTES" in texto.upper()
 
 
-def ordenar_facturas_por_fecha(df: pd.DataFrame) -> pd.DataFrame:
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    import pandas as pd
+
+def ordenar_facturas_por_fecha(df: "pd.DataFrame") -> "pd.DataFrame":
     """Ordena el DataFrame de facturas por fecha.
 
     Args:
@@ -48,7 +62,7 @@ def ordenar_facturas_por_fecha(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def clean_date(fecha_str):
+def clean_date(fecha_str: str) -> str:
     """Limpia y estandariza una cadena de fecha.
 
     Args:
@@ -84,7 +98,7 @@ def clean_date(fecha_str):
     return fecha_str
 
 
-def clean_amount(amount_str):
+def clean_amount(amount_str: str) -> str:
     """Limpia una cadena de monto, removiendo caracteres no numéricos.
 
     Args:
@@ -99,7 +113,7 @@ def clean_amount(amount_str):
     return cleaned
 
 
-def convertir_fecha_texto(fecha_str):
+def convertir_fecha_texto(fecha_str: str) -> Optional[str]:
     """Convierte fecha en texto (ej. '15 de agosto de 2024') a formato dd/mm/yyyy.
 
     Args:

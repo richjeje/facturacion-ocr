@@ -1,5 +1,6 @@
 import re
 import logging
+from typing import Optional, Dict, Any
 from fuzzywuzzy import fuzz
 from .config import (
     EMPRESAS_CONOCIDAS,
@@ -23,7 +24,7 @@ from .utils import (
 logger = logging.getLogger(__name__)
 
 
-def process_invoice_text(texto, metodo_extraccion):
+def process_invoice_text(texto: str, metodo_extraccion: str) -> Optional[Dict[str, Any]]:
     """Procesa el texto extraído de una factura y devuelve un diccionario
     con los datos parseados."""
     if debe_omitir_factura(texto):
