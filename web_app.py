@@ -10,9 +10,8 @@ from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 import jwt
 from passlib.context import CryptContext
-from extractor import extract_text
-from processor import process_invoice_text
 import shutil
+from tasks import process_file_task
 
 # Config DB Neon PostgreSQL
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@host/db")
@@ -102,7 +101,7 @@ def read_root():
         return f.read()
 
 @app.post("/api/upload")
-def api_upload_file(file: UploadFile = File(...), client: str = Depends(verify_api_key), db: SessionLocal = Depends(get_db)):
+def api_upload_file(file: UploadFile = File(...), client: str = Depends(verify_api_key)):
     # Log API call
     import logging
     logging.info(f"API upload from client: {client}, file: {file.filename}")
@@ -112,32 +111,27 @@ def api_upload_file(file: UploadFile = File(...), client: str = Depends(verify_a
     with open(temp_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    try:
-        # Process
-        texto, metodo = extract_text(temp_path)
-        if texto.strip():
-            resultado = process_invoice_text(texto, metodo)
-            if resultado:
-                invoice = Invoice(**resultado, filename=file.filename)
-                db.add(invoice)
-                db.commit()
-                return {"status": "success", "message": "Factura procesada", "data": resultado, "metadata": {"client": client, "timestamp": datetime.utcnow().isoformat()}}
-        return {"status": "error", "message": "No se pudo procesar", "metadata": {"client": client}}
-    except Exception as e:
-        logging.error(f"API error for {client}: {e}")
-        raise HTTPException(status_code=500, detail=str(e), headers={"metadata": f"client:{client}"})
-    finally:
-        os.remove(temp_path)
+    # Submit to Celery
+    task = process_file_task.delay(temp_path, file.filename, client)
+    return {"status": "queued", "task_id": task.id, "message": "Factura en cola para procesamiento", "metadata": {"client": client, "timestamp": datetime.utcnow().isoformat()}}
+
+@app.get("/api/status/{task_id}")
+def api_get_status(task_id: str, client: str = Depends(verify_api_key)):
+    from tasks import celery_app
+    result = celery_app.AsyncResult(task_id)
+    if result.state == 'PENDING':
+        return {"status": "pending", "task_id": task_id, "metadata": {"client": client}}
+    elif result.state == 'SUCCESS':
+        return {"status": "completed", "task_id": task_id, "data": result.result, "metadata": {"client": client}}
+    else:
+        return {"status": "failed", "task_id": task_id, "error": str(result.info), "metadata": {"client": client}}
 
 @app.get("/api/results")
 def api_get_results(client: str = Depends(verify_api_key), db: SessionLocal = Depends(get_db)):
     invoices = db.query(Invoice).all()
     return {"status": "success", "data": [{"id": i.id, "fecha": i.fecha, "proveedor": i.proveedor, "total": i.total, "folio": i.folio} for i in invoices], "metadata": {"client": client, "count": len(invoices)}}
 
-@app.get("/api/status/{job_id}")
-def api_get_status(job_id: int, client: str = Depends(verify_api_key)):
-    # Placeholder for async status, since no queues yet
-    return {"status": "completed", "job_id": job_id, "metadata": {"client": client}}
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

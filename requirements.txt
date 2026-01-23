@@ -20,3 +20,6 @@ redis
 plotly
 reportlab
 websockets
+easyocr
+python-docx
+python-pptx
