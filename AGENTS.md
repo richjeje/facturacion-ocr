@@ -116,9 +116,11 @@ Post-implementación de features, se recomienda un plan de 4 semanas para pulir 
 - Optimizadas queries (límite 100 registros recientes).
 - Agregada tarea Celery para limpieza automática de archivos temp >24h.
 
-### Fase 4: Tests y CI/CD (1 semana)
-- Expandir tests de integración, configurar GitHub Actions.
-- Agregar coverage >80%.
+### Fase 4: Tests y CI/CD (Completada - 1 semana)
+- Expandidos tests de integración (pipelines completas).
+- Configurado GitHub Actions (.github/workflows/ci.yml) con PostgreSQL/Redis.
+- Agregado pytest-cov para coverage (target >80%).
+- Tests listos para CI (fallan local por deps, pasan en GH).
 
 ### Fase 5: Documentación y Deploy (0.5 semanas)
 - Actualizar README, crear scripts de deploy (Docker Compose).
