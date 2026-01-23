@@ -25,3 +25,4 @@ python-docx
 python-pptx
 slowapi
 redis
+sentry-sdk[fastapi]

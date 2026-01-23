@@ -65,6 +65,36 @@ Resultado en Excel con columnas: Fecha, Proveedor, Concepto, Folio, Subtotal, IV
 - Logs en `logs/processing.log`.
 - Errores comunes: Instala Tesseract, verifica dependencias.
 
+## Despliegue
+
+### Local con Docker Compose
+1. Asegúrate de tener Docker y Docker Compose instalados.
+2. Crea un archivo `.env` con:
+   ```
+   DATABASE_URL=postgresql://user:pass@db:5432/facturacion
+   SECRET_KEY=your-secret-key
+   ```
+3. Ejecuta:
+   ```bash
+   docker-compose up --build
+   ```
+4. Accede a http://localhost:8000.
+
+### Producción en Vercel + Neon + Redis
+1. Configura Neon PostgreSQL (neon.tech) y obtén DATABASE_URL.
+2. Configura Redis (ej. Upstash) y obtén REDIS_URL.
+3. En Vercel, conecta el repo GitHub, agrega env vars (DATABASE_URL, SECRET_KEY, REDIS_URL).
+4. Despliega: Vercel maneja automáticamente.
+5. Para Celery workers: Usa Railway o similar para `celery -A tasks worker`.
+
+### Scripts de Deploy
+- `deploy.sh`: Script para deploy manual en VPS.
+- Docker Compose: Para desarrollo local.
+
+## Monitoreo
+- Logs en `logs/processing.log`.
+- Agregado Sentry para error tracking (configura DSN en env).
+
 ## Tests
 
 ```bash

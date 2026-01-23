@@ -21,6 +21,8 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 import redis
+import sentry_sdk
+from sentry_sdk.integrations.asgi import ASGIIntegration
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -77,6 +79,12 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = "your-secret-key"
 ALGORITHM = "HS256"
 security = HTTPBearer()
+
+sentry_sdk.init(
+    dsn=os.getenv("SENTRY_DSN"),
+    integrations=[ASGIIntegration()],
+    traces_sample_rate=1.0,
+)
 
 limiter = Limiter(key_func=get_remote_address)
 app = FastAPI()

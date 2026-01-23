@@ -122,9 +122,11 @@ Post-implementación de features, se recomienda un plan de 4 semanas para pulir 
 - Agregado pytest-cov para coverage (target >80%).
 - Tests listos para CI (fallan local por deps, pasan en GH).
 
-### Fase 5: Documentación y Deploy (0.5 semanas)
-- Actualizar README, crear scripts de deploy (Docker Compose).
-- Agregar monitoreo con Sentry.
+### Fase 5: Documentación y Deploy (Completada - 0.5 semanas)
+- Actualizado README con sección de deploy (Vercel + Neon + Redis).
+- Creado CHANGELOG.md con features implementadas.
+- Scripts de deploy: docker-compose.yml (local), deploy.sh (prod).
+- Agregado monitoreo con Sentry.
 
 ### Fase 6: Validación Final (0.5 semanas)
 - Full test suite, escaneo de seguridad, tests de performance.
