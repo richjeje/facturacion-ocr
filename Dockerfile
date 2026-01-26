@@ -18,5 +18,5 @@ RUN pip install -r requirements.txt
 # Crear directorios
 RUN mkdir -p imagenes output logs
 
-# Comando
-CMD ["python", "main.py"]
+# Comando (API Web por defecto)
+CMD ["python", "backend/app/main.py"]

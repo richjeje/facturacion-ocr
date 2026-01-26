@@ -25,8 +25,8 @@ Sistema para automatizar la extracción de datos de facturas mexicanas en PDFs e
 
 2. Ejecuta:
    ```bash
-   python main.py
-   ```
+    python main.py
+    ```
 
 3. Opcional: Limita archivos con input (presiona Enter para todos).
 
@@ -76,9 +76,15 @@ Resultado en Excel con columnas: Fecha, Proveedor, Concepto, Folio, Subtotal, IV
    ```
 3. Ejecuta:
    ```bash
-   docker-compose up --build
+    docker-compose up --build
    ```
 4. Accede a http://localhost:8000.
+
+## Estructura (alto nivel)
+
+- `backend/`: backend (FastAPI, Celery, OCR, parsing)
+- `frontend/`: templates y assets estaticos para la UI
+- Entrypoints (compatibles): `main.py` (CLI) y `web_app.py` (Web/API)
 
 ### Producción en Vercel + Neon + Redis
 1. Configura Neon PostgreSQL (neon.tech) y obtén DATABASE_URL.

@@ -19,6 +19,7 @@ services:
 
   web:
     build: .
+    command: python backend/app/main.py
     environment:
       DATABASE_URL: postgresql://user:pass@db:5432/facturacion
       SECRET_KEY: your-secret-key
@@ -35,7 +36,7 @@ services:
 
   worker:
     build: .
-    command: celery -A tasks worker --loglevel=info
+    command: celery -A backend.worker.tasks worker --loglevel=info
     environment:
       DATABASE_URL: postgresql://user:pass@db:5432/facturacion
       SECRET_KEY: your-secret-key
