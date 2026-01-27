@@ -1,0 +1,57 @@
+{
+  "meses_map": {
+    "ene": "01",
+    "feb": "02",
+    "mar": "03",
+    "abr": "04",
+    "may": "05",
+    "jun": "06",
+    "jul": "07",
+    "ago": "08",
+    "sep": "09",
+    "oct": "10",
+    "nov": "11",
+    "dic": "12",
+    "nev": "11"
+  },
+  "regex_fechas": [
+    "\\d{1,2}/\\d{1,2}/\\d{4}",
+    "\\d{1,2}-\\d{1,2}-\\d{4}",
+    "\\d{4}-\\d{1,2}-\\d{1,2}",
+    "\\d{1,2}/\\d{1,2}/\\d{2}",
+    "(\\d{1,2})\\s+de\\s+([a-z]+)\\s+de\\s+(\\d{4})"
+  ],
+  "regex_fecha_texto": "(\\d{1,2})/([a-z0-9]{3})\\.?/(\\d{4})(?:\\s+\\d{1,2}:\\d{2}:\\d{2})?",
+  "folio_patterns": {
+    "WIZARD ZONE MEXICO": "F(\\d{4})",
+    "PLOMERIA SELECTA": "(\\d{6}-[A-Z])",
+    "OPERADORA OMX": "OPERADORA OMX\\s*([0-9]+)",
+    "ROBERTO BRAVO GUTIERREZ": "ROBERTO BRAVO GUTIERREZ\\s*([0-9]+)",
+    "HOME DEPOT MEXICO": "HOME DEPOT MEXICO\\s*([0-9]+)",
+    "COMERCIAL ELECTRICA": "([A-Z]{2}\\d{8})"
+  },
+  "folio_patterns_general": [
+    "Folio:\\s*([0-9]+)",
+    "Folio[^f]*([0-9]+)",
+    "No\\.\\?\\s*Folio[^f]*([0-9]+)",
+    "Número\\s*de\\s*Folio[^f]*([0-9]+)",
+    "Num\\.\\?\\s*Folio[^f]*([0-9]+)",
+    "Folio\\s+Fiscal[^f]*([0-9]+)",
+    "(\\d{5,10})"
+  ],
+  "regex_subtotals": [
+    "sub\\s*total[^\\d]*\\$?(\\d+(?:[,.]\\d+)*)",
+    "subtotal\\s*:\\s*\\$?(\\d+(?:[,.]\\d+)*)",
+    "sub\\s*total\\s*\\$?(\\d+(?:[,.]\\d+)*)",
+    "sub-?tot[^\\d]*\\$?(\\d+(?:[,.]\\d+)*)",
+    "importe\\s*subtotal[^\\d]*\\$?(\\d+(?:[,.]\\d+)*)"
+  ],
+  "regex_totals": [
+    "total[^\\d]*\\$?\\s*(\\d+(?:[,.]\\d+)*)",
+    "total\\s*:\\s*\\$?\\s*(\\d+(?:[,.]\\d+)*)",
+    "total\\s+a\\s+pagar[^\\d]*\\$?\\s*(\\d+(?:[,.]\\d+)*)",
+    "importe\\s+total[^\\d]*\\$?\\s*(\\d+(?:[,.]\\d+)*)",
+    "gran\\s+total[^\\d]*\\$?\\s*(\\d+(?:[,.]\\d+)*)",
+    "total\\s+final[^\\d]*\\$?\\s*(\\d+(?:[,.]\\d+)*)"
+  ]
+}

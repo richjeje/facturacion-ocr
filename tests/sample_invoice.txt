@@ -1,0 +1,8 @@
+Factura de prueba
+Fecha: 15/08/2024
+Proveedor: TIENDAS FIX
+Folio: 12345
+Subtotal: $100.00
+IVA: $16.00
+Total: $116.00
+URL: https://example.com
