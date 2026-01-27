@@ -1,8 +1,8 @@
-# For integration, test the processor with extractor
 from processor import process_invoice_text
-from extractor import extract_text_from_docx, extract_text_from_pptx
+from extractor import extract_text
 import pytest
 import os
+from unittest.mock import patch, MagicMock
 
 def test_integration_full_process():
     # Simulate reading a text file as if extracted
@@ -15,20 +15,28 @@ def test_integration_full_process():
     assert resultado["Proveedor"] == "TIENDAS FIX"
     assert resultado["Concepto"] == "FERRETERIA"
 
-def test_integration_docx_processing():
-    # Mock a DOCX file if possible, or skip
-    pytest.skip("DOCX test requires sample file")
+@patch("backend.ocr.extractor.pdfplumber.open")
+def test_integration_pdf_to_processor(mock_pdf_open):
+    # Mock PDF extraction
+    mock_pdf = MagicMock()
+    mock_page = MagicMock()
+    mock_page.extract_text.return_value = "Factura\nFecha: 01/01/2024\nProveedor: TIENDAS FIX\nTotal: $200.00"
+    mock_pdf.pages = [mock_page]
+    mock_pdf_open.return_value.__enter__.return_value = mock_pdf
+    
+    # Create a dummy file path
+    dummy_pdf = "dummy.pdf"
+    with open(dummy_pdf, "w") as f:
+        f.write("dummy")
+    
+    try:
+        texto, metodo = extract_text(dummy_pdf)
+        resultado = process_invoice_text(texto, metodo)
+        
+        assert resultado is not None
+        assert resultado["Proveedor"] == "TIENDAS FIX"
+        assert resultado["Total"] == 200.0
+    finally:
+        if os.path.exists(dummy_pdf):
+            os.remove(dummy_pdf)
 
-def test_integration_pptx_processing():
-    # Mock a PPTX file if possible, or skip
-    pytest.skip("PPTX test requires sample file")
-
-def test_integration_full_pipeline():
-    # Test from extractor to processor
-    # This would require a real file, so mock
-    texto = "Factura de prueba\nFecha: 15/08/2024\nProveedor: TIENDAS FIX\nTotal: $116.00"
-    resultado = process_invoice_text(texto, "Texto")
-
-    assert resultado is not None
-    assert "Fecha" in resultado
-    assert "Total" in resultado

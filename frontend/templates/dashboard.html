@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Facturacion OCR{% endblock %}
+
+{% block content %}
+<style>
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 260px;
+        height: 100vh;
+        background: rgba(255, 255, 255, 0.02);
+        backdrop-filter: blur(20px);
+        border-right: 1px solid var(--border-dim);
+        padding: 2rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .nav-item {
+        padding: 1rem;
+        border-radius: 8px;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .nav-item:hover, .nav-item.active {
+        background: rgba(122, 44, 255, 0.1);
+        color: white;
+    }
+
+    .main-content {
+        margin-left: 260px;
+        padding: 2rem;
+        flex: 1;
+    }
+
+    .page-section {
+        display: none;
+    }
+
+    .page-section.active {
+        display: block;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .drop-zone {
+        border: 2px dashed var(--border-dim);
+        border-radius: 12px;
+        padding: 3rem;
+        text-align: center;
+        transition: border-color 0.2s;
+        background: rgba(0,0,0,0.2);
+    }
+
+    .drop-zone.dragover {
+        border-color: var(--mist-purple);
+        background: rgba(122, 44, 255, 0.05);
+    }
+</style>
+
+<div class="sidebar">
+    <div class="logo-text" style="font-size: 1.2rem; text-align: left; margin-bottom: 2rem;">MISTICA OCR</div>
+    
+    <div class="nav-item active" onclick="switchPage('upload')">
+        <i class="fas fa-upload"></i> Subir Factura
+    </div>
+    <div class="nav-item" onclick="switchPage('history')">
+        <i class="fas fa-history"></i> Historial
+    </div>
+    <div class="nav-item" onclick="switchPage('clients')">
+        <i class="fas fa-users"></i> Clientes
+    </div>
+    <div class="nav-item" onclick="switchPage('settings')">
+        <i class="fas fa-cog"></i> Configuración
+    </div>
+    
+    <div style="margin-top: auto;">
+        <div class="nav-item" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+        </div>
+    </div>
+</div>
+
+<div class="main-content">
+    <!-- Page: Upload -->
+    <div id="page-upload" class="page-section active">
+        <h2>Subir Nueva Factura</h2>
+        <p class="text-muted mb-4">Procesa tus documentos PDF o imágenes al instante.</p>
+        
+        <div class="card">
+            <div id="drop-zone" class="drop-zone">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--mist-purple); margin-bottom: 1rem;"></i>
+                <p>Arrastra tus archivos aquí o <span class="text-primary" style="cursor:pointer;" onclick="document.getElementById('file-input').click()">selecciona uno</span></p>
+                <input type="file" id="file-input" style="display:none;" accept=".pdf,.jpg,.jpeg,.png">
+            </div>
+            
+            <div id="file-preview" class="mt-4" style="display:none;">
+                <div class="flex justify-between items-center p-2 bg-black-30 rounded">
+                    <span id="filename">archivo.pdf</span>
+                    <button class="btn btn-primary" id="process-btn">Procesar Ahora</button>
+                </div>
+            </div>
+            
+            <div id="process-result" class="mt-4"></div>
+        </div>
+    </div>
+
+    <!-- Page: History -->
+    <div id="page-history" class="page-section">
+        <div class="flex justify-between items-center mb-4">
+            <h2>Historial de Procesamiento</h2>
+            <button class="btn btn-outline" onclick="loadHistory()"><i class="fas fa-sync"></i> Actualizar</button>
+        </div>
+        <div id="history-list" class="flex-col gap-2">
+            <!-- Items loaded via JS -->
+        </div>
+    </div>
+
+    <!-- Page: Clients -->
+    <div id="page-clients" class="page-section">
+        <h2>Mis Clientes</h2>
+        <p class="text-muted">Gestiona los clientes vinculados a tu cuenta de negocio.</p>
+        <div id="clients-list" class="stats-grid mt-4"></div>
+    </div>
+</div>
+
+<script>
+    function switchPage(pageId) {
+        document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + pageId).classList.add('active');
+        
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        
+        if (pageId === 'history') loadHistory();
+        if (pageId === 'clients') loadClients();
+    }
+
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const processBtn = document.getElementById('process-btn');
+    let selectedFile = null;
+
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        handleFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+    function handleFile(file) {
+        if (!file) return;
+        selectedFile = file;
+        document.getElementById('filename').textContent = file.name;
+        document.getElementById('file-preview').style.display = 'block';
+    }
+
+    processBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
+        processBtn.disabled = true;
+        processBtn.textContent = 'Procesando...';
+        
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        
+        try {
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-API-Key': 'test-api-key' } // Note: Real app should use user session/key
+            });
+            const data = await res.json();
+            document.getElementById('process-result').innerHTML = `
+                <div class="card mt-2 border-primary">
+                    <h4 class="text-success">¡Enviado!</h4>
+                    <p>Tarea ID: ${data.task_id}</p>
+                    <small class="text-muted">El resultado aparecerá en el historial en unos momentos.</small>
+                </div>
+            `;
+        } catch (e) {
+            alert('Error al procesar');
+        } finally {
+            processBtn.disabled = false;
+            processBtn.textContent = 'Procesar Ahora';
+        }
+    });
+
+    async function loadHistory() {
+        const container = document.getElementById('history-list');
+        container.innerHTML = '<p class="text-muted">Cargando historial...</p>';
+        try {
+            const res = await fetch('/api/results', { headers: { 'X-API-Key': 'test-api-key' } });
+            const json = await res.json();
+            if (json.data && json.data.length > 0) {
+                container.innerHTML = json.data.map(i => `
+                    <div class="card flex justify-between items-center p-3">
+                        <div>
+                            <strong>${i.proveedor || 'Sin Proveedor'}</strong><br>
+                            <small class="text-muted">${i.fecha || 'Sin Fecha'} - Folio: ${i.folio || 'N/A'}</small>
+                        </div>
+                        <div style="font-size: 1.1rem; font-weight: bold;">$${i.total || '0.00'}</div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p class="text-muted">No hay facturas procesadas.</p>';
+            }
+        } catch (e) {
+            container.innerHTML = '<p class="text-danger">Error al cargar historial.</p>';
+        }
+    }
+
+    async function loadClients() {
+        // Placeholder for now
+        document.getElementById('clients-list').innerHTML = '<div class="card"><p class="text-muted">Módulo de clientes en desarrollo.</p></div>';
+    }
+
+    function logout() {
+        localStorage.removeItem('token');
+        window.location.href = '/';
+    }
+</script>
+{% endblock %}

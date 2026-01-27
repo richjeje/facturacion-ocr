@@ -1,114 +1,70 @@
-# Facturacion OCR
+# Facturación OCR SaaS
 
-Sistema para automatizar la extracción de datos de facturas mexicanas en PDFs e imágenes usando OCR.
+Sistema avanzado de extracción de datos de facturas (PDF, Imágenes, DOCX, PPTX) utilizando OCR (EasyOCR/Tesseract) y procesamiento asíncrono.
 
-## Instalación
+## 🚀 Características (Fases 1-6)
 
-1. Clona el repositorio:
-   ```bash
-   git clone <repo-url>
-   cd facturacion_ocr
-   ```
+- **Extracción Multi-formato**: Soporte para PDF (texto y OCR), JPG, PNG, DOCX y PPTX.
+- **Procesamiento Inteligente**: 
+  - Carga perezosa de modelos OCR para ahorro de RAM.
+  - Procesamiento paralelo de páginas en PDF.
+  - Paginación de resultados y caching con Redis.
+- **Arquitectura Robusta**:
+  - Backend modular con FastAPI.
+  - Colas de trabajo con Celery + Redis.
+  - Persistencia en PostgreSQL (soporta esquemas personalizados).
+- **Dashboard & API**:
+  - Interfaz web con diseño "Mistica" (oscuro/moderno).
+  - Dashboard interactivo con Plotly.
+  - API REST protegida por API Keys y JWT.
+- **Calidad & DevOps**:
+  - Cobertura de tests >80% con Pytest.
+  - CI/CD automatizado con GitHub Actions.
+  - Contenerización completa con Docker Compose.
 
-2. Instala dependencias:
-   ```bash
-   pip install -r requirements.txt
-   ```
+## 🛠️ Instalación y Desarrollo
 
-3. Instala Tesseract OCR:
-   - Windows: Descarga de [GitHub Tesseract](https://github.com/UB-Mannheim/tesseract/wiki)
-   - Asegúrate de que esté en PATH.
+### Requisitos
+- Python 3.12+
+- Docker y Docker Compose
+- Tesseract OCR (`sudo apt install tesseract-ocr`)
 
-## Uso
+### Configuración Local
+1. Clonar el repositorio.
+2. Crear un entorno virtual: `python -m venv venv`.
+3. Instalar dependencias: `pip install -r requirements.txt -r requirements-dev.txt`.
+4. Configurar `.env` (ver sección Variables).
+5. Ejecutar la app: `uvicorn backend.app.main:app --reload`.
 
-1. Coloca facturas en la carpeta `imagenes/` (PDFs, JPG, PNG).
+### Testing y Calidad
+```bash
+# Ejecutar tests con cobertura
+pytest --cov=.
 
-2. Ejecuta:
-   ```bash
-    python main.py
-    ```
-
-3. Opcional: Limita archivos con input (presiona Enter para todos).
-
-4. Resultados en `output/facturas_procesadas.xlsx`.
-
-## Configuración
-
-- **Empresas**: Edita `companies.json` para agregar/eliminar proveedores.
-- **Patrones**: Edita `patterns.json` para regex de fechas/folios.
-- **Logs**: En `logs/processing.log`.
-
-## Estructura
-
-- `main.py`: Orquestación principal.
-- `config.py`: Configuraciones.
-- `extractor.py`: Extracción de texto.
-- `processor.py`: Parsing de datos.
-- `utils.py`: Utilidades.
-- `tests/`: Tests unitarios.
-
-## Ejemplos
-
-Factura de muestra:
-```
-Fecha: 15/08/2024
-Proveedor: TIENDAS FIX
-Folio: 12345
-Subtotal: $100.00
-Total: $116.00
+# Linting
+black .
+flake8 .
+mypy .
 ```
 
-Resultado en Excel con columnas: Fecha, Proveedor, Concepto, Folio, Subtotal, IVA, Total, etc.
-
-## Logs y Errores
-
-- Logs en `logs/processing.log`.
-- Errores comunes: Instala Tesseract, verifica dependencias.
-
-## Despliegue
-
-### Local con Docker Compose
-1. Asegúrate de tener Docker y Docker Compose instalados.
-2. Crea un archivo `.env` con:
-   ```
-   DATABASE_URL=postgresql://user:pass@db:5432/facturacion
-   SECRET_KEY=your-secret-key
-   ```
-3. Ejecuta:
-   ```bash
-    docker-compose up --build
-   ```
-4. Accede a http://localhost:8000.
-
-## Estructura (alto nivel)
-
-- `backend/`: backend (FastAPI, Celery, OCR, parsing)
-- `frontend/`: templates y assets estaticos para la UI
-- Entrypoints (compatibles): `main.py` (CLI) y `web_app.py` (Web/API)
-
-### Producción en Vercel + Neon + Redis
-1. Configura Neon PostgreSQL (neon.tech) y obtén DATABASE_URL.
-2. Configura Redis (ej. Upstash) y obtén REDIS_URL.
-3. En Vercel, conecta el repo GitHub, agrega env vars (DATABASE_URL, SECRET_KEY, REDIS_URL).
-4. Despliega: Vercel maneja automáticamente.
-5. Para Celery workers: Usa Railway o similar para `celery -A tasks worker`.
-
-### Scripts de Deploy
-- `deploy.sh`: Script para deploy manual en VPS.
-- Docker Compose: Para desarrollo local.
-
-## Monitoreo
-- Logs en `logs/processing.log`.
-- Agregado Sentry para error tracking (configura DSN en env).
-
-## Tests
+## 🐳 Despliegue con Docker
 
 ```bash
-pytest tests/
+# Iniciar stack completo (API, Worker, Beat, Redis, DB)
+docker-compose up -d
 ```
 
-## Contribución
+### Variables de Entorno (.env)
+```ini
+DATABASE_URL=postgresql://user:pass@localhost:5432/facturacion
+REDIS_URL=redis://localhost:6379/0
+SECRET_KEY=tu_clave_secreta_aqui
+DB_SCHEMA=public
+```
 
-1. Fork y branch.
-2. Tests para cambios.
-3. PR con descripción.
+## 📄 Documentación de API
+- **Swagger UI**: `http://localhost:8000/docs`
+- **ReDoc**: `http://localhost:8000/redoc`
+
+---
+**Desarrollado con opencode - Enero 2026**

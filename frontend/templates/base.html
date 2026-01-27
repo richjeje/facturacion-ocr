@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Facturacion OCR{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/mistica.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    {% block content %}{% endblock %}
+    
+    <!-- Global Notifications -->
+    <div id="global-notifications" class="flex-col gap-2" style="position: fixed; top: 1rem; right: 1rem; width: 300px; z-index: 9999; display: none;">
+        <div class="card p-2">
+            <div class="flex justify-between items-center mb-2">
+                <h4 style="margin: 0;">Notificaciones</h4>
+                <button class="btn btn-outline" onclick="document.getElementById('global-notifications').style.display = 'none';" style="font-size: 0.8rem;">×</button>
+            </div>
+            <div id="not-list"></div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchNotifications() {
+            try {
+                const res = await fetch('/api/notifications');
+                const list = res.ok ? await res.json() : [];
+                const container = document.getElementById('not-list');
+                const currentCount = parseInt(container.dataset.count || '0');
+                
+                if (list.length > currentCount) {
+                    container.innerHTML = list.slice(0, 5).map(n => {
+                        const ago = Math.floor((Date.now() - new Date(n.created_at).getTime()) / 60000);
+                        return `<div class="p-2 border-bottom:1px solid var(--border-dim);"><strong>${n.title}</strong><br><small style="color:var(--muted);">${n.message}</small><br><small style="color:var(--muted); opacity:0.7;">hace ${ago} min</small></div>`;
+                    }).join('');
+                    container.dataset.count = list.length;
+                    document.getElementById('global-notifications').style.display = 'flex';
+                }
+            } catch (e) {
+                console.error("Error fetching notifications", e);
+            }
+        }
+
+        fetchNotifications();
+        setInterval(fetchNotifications, 30000);
+    </script>
+</body>
+</html>

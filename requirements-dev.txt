@@ -1,0 +1,10 @@
+pytest
+pytest-cov
+pytest-asyncio
+httpx
+black
+flake8
+mypy
+types-python-jose
+types-passlib
+sqlalchemy-stubs

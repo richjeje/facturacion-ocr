@@ -45,9 +45,21 @@ services:
       - db
       - redis
     volumes:
-      - ./imagenes:/app/imagenes
-      - ./output:/app/output
+      - ./logs:/app/logs
+
+  beat:
+    build: .
+    command: celery -A backend.worker.tasks beat --loglevel=info
+    environment:
+      DATABASE_URL: postgresql://user:pass@db:5432/facturacion
+      SECRET_KEY: your-secret-key
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    volumes:
       - ./logs:/app/logs
 
 volumes:
+
   postgres_data:

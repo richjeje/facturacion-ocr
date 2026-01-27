@@ -7,27 +7,31 @@ from fastapi import (
     status,
     Header,
     WebSocket,
+    Request,
 )
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.templating import Jinja2Templates
+from starlette.responses import Response, StreamingResponse, HTMLResponse
 from fastapi.websockets import WebSocketDisconnect
 import uvicorn
 import os
 import json
+import shutil
+import redis
+import sentry_sdk
+from datetime import datetime
 from typing import List, Dict, Any
+import jwt
+from passlib.context import CryptContext
+from sqlalchemy.orm import Session
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
-import redis
-import sentry_sdk
+
 from backend.core.database import Base, SessionLocal, engine
 from backend.core.models import User, APIKey, Invoice
-from datetime import datetime
-import jwt
-from passlib.context import CryptContext
-import shutil
 from backend.worker.tasks import process_file_task
 
 # Auth
@@ -47,21 +51,19 @@ app.add_middleware(SlowAPIMiddleware)
 
 @app.on_event("startup")
 def _startup_create_tables() -> None:
-    # Keep this lightweight for local/dev; in production prefer migrations.
     Base.metadata.create_all(bind=engine)
 
 # Redis for caching
 _redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 redis_client = redis.Redis.from_url(_redis_url, decode_responses=True)
 
-# Mount static files for frontend
-_STATIC_DIR = os.path.join(
-    os.path.dirname(__file__), "..", "..", "frontend", "static"
-)
-_TEMPLATES_DIR = os.path.join(
-    os.path.dirname(__file__), "..", "..", "frontend", "templates"
-)
+# Path setup
+_BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+_STATIC_DIR = os.path.join(_BASE_DIR, "frontend", "static")
+_TEMPLATES_DIR = os.path.join(_BASE_DIR, "frontend", "templates")
+
 app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
+templates = Jinja2Templates(directory=_TEMPLATES_DIR)
 
 
 def get_db():
@@ -85,7 +87,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
-def verify_api_key(x_api_key: str = Header(None), db: SessionLocal = Depends(get_db)):
+def verify_api_key(x_api_key: str = Header(None), db: Session = Depends(get_db)):
     if not x_api_key:
         raise HTTPException(status_code=401, detail="API key required")
     key = db.query(APIKey).filter(APIKey.key == x_api_key).first()
@@ -95,46 +97,49 @@ def verify_api_key(x_api_key: str = Header(None), db: SessionLocal = Depends(get
 
 
 @app.post("/login")
-def login(username: str, password: str, db: SessionLocal = Depends(get_db)):
+def login(username: str, password: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
-    if not user or not pwd_context.verify(password, user.hashed_password):
+    if not user or not pwd_context.verify(password, str(user.hashed_password)):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     token = jwt.encode({"sub": username}, SECRET_KEY, algorithm=ALGORITHM)
     return {"access_token": token, "token_type": "bearer"}
 
 
 @app.get("/", response_class=HTMLResponse)
-def read_root():
-    with open(os.path.join(_TEMPLATES_DIR, "index.html"), "r", encoding="utf-8") as f:
-        return f.read()
+def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/signup", response_class=HTMLResponse)
+def signup_page(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard(request: Request, username: str = Depends(verify_token), db: Session = Depends(get_db)):
+    return templates.TemplateResponse("dashboard.html", {"request": request, "username": username})
 
 
 @app.post("/api/upload")
 @limiter.limit("100/minute")
 def api_upload_file(
-    file: UploadFile = File(...), client: str = Depends(verify_api_key)
+    request: Request, file: UploadFile = File(...), client: str = Depends(verify_api_key)
 ) -> Dict[str, Any]:
-    # Sanitize filename
     import re
-    safe_filename = re.sub(r'[^\w\.-]', '_', file.filename)
+    _filename: str = str(file.filename or "unknown")
+    safe_filename = re.sub(r'[^\w\.-]', '_', _filename)
     if len(safe_filename) > 100:
         safe_filename = safe_filename[:100]
 
-    # Log API call
-    import logging
-    logging.info(f"API upload from client: {client}, file: {safe_filename}")
-
-    # Save file temporarily
     temp_path = f"temp_{safe_filename}"
     with open(temp_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    # Submit to Celery
-    task = process_file_task.delay(temp_path, file.filename, client)
+    task = process_file_task.delay(temp_path, _filename, client)
     return {
         "status": "queued",
         "task_id": task.id,
-        "message": "Factura en cola para procesamiento",
+        "message": "Factura en cola",
         "metadata": {"client": client, "timestamp": datetime.utcnow().isoformat()},
     }
 
@@ -142,112 +147,41 @@ def api_upload_file(
 @app.get("/api/status/{task_id}")
 def api_get_status(task_id: str, client: str = Depends(verify_api_key)):
     from backend.worker.tasks import celery_app
-
     result = celery_app.AsyncResult(task_id)
-    if result.state == "PENDING":
-        return {"status": "pending", "task_id": task_id, "metadata": {"client": client}}
-    elif result.state == "SUCCESS":
-        return {
-            "status": "completed",
-            "task_id": task_id,
-            "data": result.result,
-            "metadata": {"client": client},
-        }
-    else:
-        return {
-            "status": "failed",
-            "task_id": task_id,
-            "error": str(result.info),
-            "metadata": {"client": client},
-        }
+    return {
+        "status": result.state.lower(),
+        "task_id": task_id,
+        "result": result.result if result.state == "SUCCESS" else None,
+        "metadata": {"client": client}
+    }
 
 
 @app.get("/api/results")
 @limiter.limit("200/minute")
 def api_get_results(
-    client: str = Depends(verify_api_key), db: SessionLocal = Depends(get_db)
+    request: Request,
+    client: str = Depends(verify_api_key),
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 100
 ) -> Dict[str, Any]:
-    invoices = db.query(Invoice).all()
+    invoices = db.query(Invoice).offset(skip).limit(limit).all()
+    total_count = db.query(Invoice).count()
     return {
         "status": "success",
         "data": [
-            {
-                "id": i.id,
-                "fecha": i.fecha,
-                "proveedor": i.proveedor,
-                "total": i.total,
-                "folio": i.folio,
-            }
+            {"id": i.id, "fecha": i.fecha, "proveedor": i.proveedor, "total": i.total, "folio": i.folio}
             for i in invoices
         ],
-        "metadata": {"client": client, "count": len(invoices)},
+        "metadata": {"client": client, "total": total_count, "skip": skip, "limit": limit},
     }
 
 
-@app.get("/dashboard", response_class=HTMLResponse)
-def dashboard(username: str = Depends(verify_token), db: SessionLocal = Depends(get_db)):
-    # Check cache
-    cache_key = "dashboard_data"
-    cached = redis_client.get(cache_key)
-    if cached:
-        charts = json.loads(cached)
-    else:
-        invoices = db.query(Invoice).order_by(Invoice.fecha.desc()).limit(100).all()  # Optimize: limit to recent 100
-        # Generate Plotly charts
-        import plotly.graph_objects as go
-        from plotly.utils import PlotlyJSONEncoder
-
-        # Gastos por proveedor
-        proveedores = {}
-        for inv in invoices:
-            proveedores[inv.proveedor] = proveedores.get(inv.proveedor, 0) + inv.total
-        fig1 = go.Figure(data=[go.Bar(x=list(proveedores.keys()), y=list(proveedores.values()))])
-        fig1.update_layout(title="Gastos por Proveedor")
-
-        # Errores por tipo (simulado, ya que no hay campo error, usar confianza baja)
-        errores = sum(1 for inv in invoices if inv.confianza_proveedor < 70)
-        fig2 = go.Figure(data=[go.Pie(labels=["Exitosos", "Errores"], values=[len(invoices) - errores, errores])])
-        fig2.update_layout(title="Facturas Procesadas")
-
-        charts = {
-            "gastos": json.dumps(fig1, cls=PlotlyJSONEncoder),
-            "errores": json.dumps(fig2, cls=PlotlyJSONEncoder)
-        }
-        # Cache for 5 min
-        redis_client.setex(cache_key, 300, json.dumps(charts))
-
-    html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Dashboard</title>
-        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    </head>
-    <body>
-        <h1>Dashboard de Facturas</h1>
-        <div id="chart1"></div>
-        <div id="chart2"></div>
-        <form id="filter-form">
-            <label>Fecha Inicio: <input type="date" id="start-date"></label>
-            <label>Fecha Fin: <input type="date" id="end-date"></label>
-            <button type="submit">Filtrar</button>
-        </form>
-        <button onclick="exportPDF()">Exportar PDF</button>
-        <script>
-            Plotly.newPlot('chart1', {charts["gastos"]});
-            Plotly.newPlot('chart2', {charts["errores"]});
-
-            const ws = new WebSocket('ws://localhost:8000/ws');
-            ws.onmessage = function(event) {{
-                const data = JSON.parse(event.data);
-                // Update charts
-                console.log('Update:', data);
-            }};
-        </script>
-    </body>
-    </html>
-    """
-    return html
+@app.get("/api/notifications")
+def get_notifications():
+    return [
+        {"title": "Sistema Listo", "message": "El motor OCR está activo.", "created_at": datetime.utcnow().isoformat()},
+    ]
 
 
 @app.websocket("/ws")
@@ -256,31 +190,26 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             await websocket.receive_text()
-            # Simulate real-time update
             await websocket.send_text(json.dumps({"update": "new_invoice"}))
     except WebSocketDisconnect:
         pass
 
 
 @app.get("/export/pdf")
-def export_pdf(
-    username: str = Depends(verify_token), db: SessionLocal = Depends(get_db)
-):
+def export_pdf(username: str = Depends(verify_token), db: Session = Depends(get_db)):
     from reportlab.pdfgen import canvas
     from io import BytesIO
-
     buffer = BytesIO()
     c = canvas.Canvas(buffer)
     c.drawString(100, 750, "Reporte de Facturas")
     invoices = db.query(Invoice).all()
     y = 700
-    for inv in invoices[:10]:  # Limit to 10
+    for inv in invoices[:10]:
         c.drawString(100, y, f"{inv.fecha} - {inv.proveedor} - {inv.total}")
         y -= 20
     c.save()
-
     buffer.seek(0)
-    return FileResponse(buffer, media_type="application/pdf", filename="reporte.pdf")
+    return StreamingResponse(buffer, media_type="application/pdf", headers={"Content-Disposition": "attachment; filename=reporte.pdf"})
 
 
 if __name__ == "__main__":
