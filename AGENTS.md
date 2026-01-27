@@ -145,5 +145,5 @@ Post-implementación de features, se recomienda un plan de 4 semanas para pulir 
 
 ---
 
-**Actualizado:** Enero 2025
+**Actualizado:** 27 de Enero 2026
 **Asistente:** opencode
