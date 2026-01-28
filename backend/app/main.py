@@ -59,7 +59,22 @@ app.add_middleware(SlowAPIMiddleware)
 
 @app.on_event("startup")
 def _startup_create_tables() -> None:
-    Base.metadata.create_all(bind=engine)
+    # Create basic tables first
+    from backend.core.models import User, APIKey, Invoice
+    User.metadata.create_all(bind=engine)
+    APIKey.metadata.create_all(bind=engine)
+    Invoice.metadata.create_all(bind=engine)
+    
+    # Create CFDI tables separately with error handling
+    try:
+        from backend.core.cfdi_models import CFDICertificate, CFDIInvoice, CFDICatalog, CFDISettings
+        CFDICertificate.metadata.create_all(bind=engine)
+        CFDIInvoice.metadata.create_all(bind=engine)
+        CFDICatalog.metadata.create_all(bind=engine)
+        CFDISettings.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"Warning: Could not create CFDI tables: {e}")
+        print("CFDI features will be disabled until tables are manually created")
     
     # Create fictitious users
     db = SessionLocal()
