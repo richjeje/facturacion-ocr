@@ -1,9 +1,9 @@
 from celery import Celery
 
-from backend.ocr.extractor import extract_text
-from backend.parsing.processor import process_invoice_text
-from backend.core.config import setup_logging
-from backend.core.persistence import save_to_database
+from ocr.extractor import extract_text
+from parsing.processor import process_invoice_text
+from core.config import setup_logging
+from core.persistence import save_to_database
 
 logger = setup_logging()
 

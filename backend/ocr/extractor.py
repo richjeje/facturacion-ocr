@@ -10,7 +10,7 @@ import time
 import easyocr
 from docx import Document
 from pptx import Presentation
-from backend.core.utils import ExtractionError
+from core.utils import ExtractionError
 from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger(__name__)

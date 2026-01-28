@@ -35,10 +35,16 @@
         color: white;
     }
 
+    .dashboard-container {
+        display: flex;
+        min-height: 100vh;
+    }
+
     .main-content {
         margin-left: 260px;
         padding: 2rem;
         flex: 1;
+        width: calc(100% - 260px);
     }
 
     .page-section {
@@ -71,18 +77,55 @@
     }
 </style>
 
+<div class="dashboard-container">
 <div class="sidebar">
-    <div class="logo-text" style="font-size: 1.2rem; text-align: left; margin-bottom: 2rem;">MISTICA OCR</div>
+    <div class="logo-text" style="font-size: 1.2rem; text-align: left; margin-bottom: 1rem;">MISTICA OCR</div>
     
+    <div class="flex-col items-center mb-4 p-2 card" style="border: none; background: rgba(255,255,255,0.05);">
+        {% if user.profile_photo %}
+        <img id="side-profile-photo" src="{{ user.profile_photo }}" 
+             style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--mist-purple);">
+        {% else %}
+        <div id="side-profile-photo-placeholder" style="width: 80px; height: 80px; border-radius: 50%; background: var(--mist-purple); display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 2px solid rgba(255,255,255,0.1);">
+            <i class="fas fa-user"></i>
+        </div>
+        <img id="side-profile-photo" src="" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--mist-purple); display: none;">
+        {% endif %}
+        <div class="mt-2 text-center">
+            <div style="font-weight: bold; font-size: 0.9rem;">{{ user.username }}</div>
+            <div class="text-muted" style="font-size: 0.75rem;">{{ user.role | capitalize }}</div>
+        </div>
+    </div>
+
     <div class="nav-item active" onclick="switchPage('upload')">
-        <i class="fas fa-upload"></i> Subir Factura
+        <i class="fas fa-plus-circle"></i> Nueva Factura
+    </div>
+    <div class="nav-item" onclick="switchPage('invoicing')">
+        <i class="fas fa-file-invoice-dollar"></i> Facturar
     </div>
     <div class="nav-item" onclick="switchPage('history')">
-        <i class="fas fa-history"></i> Historial
+        <i class="fas fa-history"></i> Historial Recibidas
     </div>
+    <div class="nav-item" onclick="switchPage('issued')">
+        <i class="fas fa-paper-plane"></i> Facturas Emitidas
+    </div>
+    
+    <div class="nav-item" onclick="switchPage('profile')">
+        <i class="fas fa-user-circle"></i> Mi Perfil
+    </div>
+
+    {% if user.role == 'negocio' %}
     <div class="nav-item" onclick="switchPage('clients')">
-        <i class="fas fa-users"></i> Clientes
+        <i class="fas fa-users"></i> Mis Clientes
     </div>
+    {% endif %}
+
+    {% if user.role == 'admin' %}
+    <div class="nav-item" onclick="window.location.href='/admin/dashboard'">
+        <i class="fas fa-user-shield"></i> Administración
+    </div>
+    {% endif %}
+
     <div class="nav-item" onclick="switchPage('settings')">
         <i class="fas fa-cog"></i> Configuración
     </div>
@@ -129,6 +172,92 @@
         </div>
     </div>
 
+    <!-- Page: Issued -->
+    <div id="page-issued" class="page-section">
+        <div class="flex justify-between items-center mb-4">
+            <h2>Facturas Emitidas</h2>
+            <button class="btn btn-primary" onclick="switchPage('invoicing')"><i class="fas fa-plus"></i> Nueva Emisión</button>
+        </div>
+        <div id="issued-list" class="flex-col gap-2">
+            <p class="text-muted text-center p-4">No has emitido facturas aún.</p>
+        </div>
+    </div>
+
+    <!-- Page: Invoicing -->
+    <div id="page-invoicing" class="page-section">
+        <h2>Crear Nueva Factura</h2>
+        <p class="text-muted mb-4">Emite una factura manualmente llenando los campos requeridos.</p>
+        <div class="card">
+            <form id="invoice-form">
+                <div class="stats-grid">
+                    <div class="input-group">
+                        <label>Cliente</label>
+                        <select id="inv-client" required>
+                            <option value="">Selecciona un cliente</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Concepto</label>
+                        <input type="text" id="inv-concept" placeholder="Venta de productos" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Total</label>
+                        <input type="number" id="inv-total" step="0.01" placeholder="0.00" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-full mt-4">Emitir Factura</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Page: Profile -->
+    <div id="page-profile" class="page-section">
+        <h2>Mi Perfil</h2>
+        <div class="card flex-col gap-4">
+            <div class="flex items-center gap-4 p-4 border-bottom:1px solid var(--border-dim);">
+                {% if user.profile_photo %}
+                <img id="profile-preview" src="{{ user.profile_photo }}" 
+                     style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid var(--mist-purple);">
+                {% else %}
+                <div id="profile-preview-placeholder" style="width: 120px; height: 120px; border-radius: 50%; background: var(--mist-purple); display: flex; align-items: center; justify-content: center; font-size: 3rem; border: 2px solid rgba(255,255,255,0.1);">
+                    <i class="fas fa-user"></i>
+                </div>
+                <img id="profile-preview" src="" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 2px solid var(--mist-purple); display: none;">
+                {% endif %}
+                <div class="flex-col">
+                    <h3>{{ user.username }}</h3>
+                    <p class="text-muted">{{ user.email }}</p>
+                    <label class="btn btn-outline" style="font-size: 0.8rem; padding: 0.5rem 1rem;">
+                        Cambiar Foto
+                        <input type="file" id="photo-upload" style="display:none;" accept="image/*">
+                    </label>
+                </div>
+            </div>
+            
+            <form id="profile-update-form">
+                <div class="stats-grid mt-2">
+                    <div class="input-group">
+                        <label>Nombre Completo / Negocio</label>
+                        <input type="text" id="prof-name" value="{{ user.business_name or user.username }}">
+                    </div>
+                    <div class="input-group">
+                        <label>RFC</label>
+                        <input type="text" id="prof-rfc" value="{{ user.business_rfc or '' }}">
+                    </div>
+                    <div class="input-group">
+                        <label>Email</label>
+                        <input type="email" id="prof-email" value="{{ user.email or '' }}">
+                    </div>
+                    <div class="input-group">
+                        <label>Teléfono</label>
+                        <input type="tel" id="prof-phone" value="{{ user.phone or '' }}">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary mt-2">Guardar Información</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Page: Clients -->
     <div id="page-clients" class="page-section">
         <h2>Mis Clientes</h2>
@@ -140,14 +269,114 @@
 <script>
     function switchPage(pageId) {
         document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
-        document.getElementById('page-' + pageId).classList.add('active');
+        const targetPage = document.getElementById('page-' + pageId);
+        if (targetPage) targetPage.classList.add('active');
         
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        event.currentTarget.classList.add('active');
+        // Find the nav item that corresponds to the pageId
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(`'${pageId}'`)) {
+                item.classList.add('active');
+            }
+        });
         
         if (pageId === 'history') loadHistory();
+        if (pageId === 'issued') loadIssued();
         if (pageId === 'clients') loadClients();
     }
+
+    // Photo Upload Logic
+    document.getElementById('photo-upload').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await fetch('/api/profile/photo', {
+                method: 'POST',
+                body: formData,
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                const imgProf = document.getElementById('profile-preview');
+                const imgSide = document.getElementById('side-profile-photo');
+                const placeholderProf = document.getElementById('profile-preview-placeholder');
+                const placeholderSide = document.getElementById('side-profile-photo-placeholder');
+                
+                if (imgProf) { imgProf.src = data.url; imgProf.style.display = 'block'; }
+                if (imgSide) { imgSide.src = data.url; imgSide.style.display = 'block'; }
+                if (placeholderProf) placeholderProf.style.display = 'none';
+                if (placeholderSide) placeholderSide.style.display = 'none';
+                
+                alert('Foto actualizada');
+            }
+        } catch (e) {
+            alert('Error al subir foto');
+        }
+    });
+
+    async function loadIssued() {
+        const container = document.getElementById('issued-list');
+        container.innerHTML = '<p class="text-muted text-center p-4">Cargando...</p>';
+        try {
+            const res = await fetch('/api/issued', {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+            });
+            const json = await res.json();
+            if (json.data && json.data.length > 0) {
+                // Render issued list
+            } else {
+                container.innerHTML = '<p class="text-muted text-center p-4">No has emitido facturas aún.</p>';
+            }
+        } catch (e) {
+            container.innerHTML = '<p class="text-danger text-center p-4">Error al cargar.</p>';
+        }
+    }
+
+    document.getElementById('invoice-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const concept = document.getElementById('inv-concept').value;
+        const total = document.getElementById('inv-total').value;
+        
+        try {
+            const res = await fetch(`/api/invoicing?concept=${encodeURIComponent(concept)}&total=${total}`, {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+            });
+            const data = await res.json();
+            alert(data.message);
+            if (res.ok) switchPage('issued');
+        } catch (e) {
+            alert('Error al emitir factura');
+        }
+    });
+
+    document.getElementById('profile-update-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const params = new URLSearchParams({
+            business_name: document.getElementById('prof-name').value,
+            owner_name: document.getElementById('prof-name').value, // Simplified
+            rfc: document.getElementById('prof-rfc').value,
+            phone: document.getElementById('prof-phone').value,
+            email: document.getElementById('prof-email').value,
+            address: '', // Placeholder
+            postal_code: ''
+        });
+
+        try {
+            const res = await fetch('/api/business/profile?' + params.toString(), {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+            });
+            if (res.ok) alert('Perfil actualizado');
+        } catch (e) {
+            alert('Error al actualizar');
+        }
+    });
 
     const dropZone = document.getElementById('drop-zone');
     const fileInput = document.getElementById('file-input');
@@ -183,16 +412,20 @@
             const res = await fetch('/api/upload', {
                 method: 'POST',
                 body: formData,
-                headers: { 'X-API-Key': 'test-api-key' } // Note: Real app should use user session/key
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
             });
             const data = await res.json();
-            document.getElementById('process-result').innerHTML = `
-                <div class="card mt-2 border-primary">
-                    <h4 class="text-success">¡Enviado!</h4>
-                    <p>Tarea ID: ${data.task_id}</p>
-                    <small class="text-muted">El resultado aparecerá en el historial en unos momentos.</small>
-                </div>
-            `;
+            if (res.ok) {
+                document.getElementById('process-result').innerHTML = `
+                    <div class="card mt-2 border-primary">
+                        <h4 class="text-success">¡Enviado!</h4>
+                        <p>Tarea ID: ${data.task_id}</p>
+                        <small class="text-muted">El resultado aparecerá en el historial en unos momentos.</small>
+                    </div>
+                `;
+            } else {
+                alert('Error: ' + data.detail);
+            }
         } catch (e) {
             alert('Error al procesar');
         } finally {
@@ -205,7 +438,9 @@
         const container = document.getElementById('history-list');
         container.innerHTML = '<p class="text-muted">Cargando historial...</p>';
         try {
-            const res = await fetch('/api/results', { headers: { 'X-API-Key': 'test-api-key' } });
+            const res = await fetch('/api/results', { 
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') } 
+            });
             const json = await res.json();
             if (json.data && json.data.length > 0) {
                 container.innerHTML = json.data.map(i => `
@@ -230,9 +465,13 @@
         document.getElementById('clients-list').innerHTML = '<div class="card"><p class="text-muted">Módulo de clientes en desarrollo.</p></div>';
     }
 
-    function logout() {
+    async function logout() {
+        try {
+            await fetch('/logout', { method: 'POST' });
+        } catch (e) {}
         localStorage.removeItem('token');
         window.location.href = '/';
     }
 </script>
+</div>
 {% endblock %}

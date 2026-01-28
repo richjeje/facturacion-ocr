@@ -27,7 +27,7 @@
             
             <div class="mt-4 text-center" style="font-size: 0.9rem;">
                 <span class="text-muted">¿No tienes cuenta?</span> 
-                <a href="/signup">Regístrate como Negocio</a>
+                <a href="/signup">Crear cuenta para Cliente</a>
             </div>
         </div>
     </div>
@@ -50,12 +50,11 @@
             const data = await res.json();
             
             if (res.ok) {
+                // Token is now also set in HTTP-only cookie by the server
                 localStorage.setItem('token', data.access_token);
                 window.location.href = '/dashboard';
-            } else {
-                errDiv.textContent = data.detail || 'Error al iniciar sesión';
-                errDiv.style.display = 'block';
             }
+
         } catch (error) {
             errDiv.textContent = 'Error de conexión';
             errDiv.style.display = 'block';

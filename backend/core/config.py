@@ -347,3 +347,20 @@ def setup_logging():
     logger.addHandler(console_handler)
 
     return logger
+
+# --- Configuración CFDI ---
+CFDI_SETTINGS = {
+    "facturama": {
+        "sandbox_url": "https://sandbox.facturama.mx/api/v3",
+        "prod_url": "https://api.facturama.mx/api/v3",
+        "timeout": 30,
+        "retries": 3
+    },
+    "sat_catalogs": {
+        "update_interval": 86400,  # 24 horas
+        "cache_ttl": 3600,        # 1 hora
+        "sources": [
+            "https://www.sat.gob.mx/sitio_internet/cfd/4/c_ClaveProdServ.txt"
+        ]
+    }
+}

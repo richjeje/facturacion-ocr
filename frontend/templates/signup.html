@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Registro - Facturacion OCR{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-box">
+        <div class="logo-text">FACTURACION OCR</div>
+        
+        <div class="card">
+            <div class="flex gap-4 mb-4 justify-center">
+                <button class="btn btn-outline active" id="tab-cliente" onclick="switchTab('cliente')">Cliente</button>
+                <button class="btn btn-outline" id="tab-negocio" onclick="switchTab('negocio')">Negocio</button>
+            </div>
+
+            <div id="signup-error" class="text-danger mb-3" style="display: none; font-size: 0.9rem;"></div>
+            <div id="signup-success" class="text-success mb-3" style="display: none; font-size: 0.9rem;"></div>
+            
+            <!-- Formulario Cliente -->
+            <form id="form-cliente">
+                <div class="input-group">
+                    <label for="c-username">Usuario</label>
+                    <input type="text" id="c-username" required placeholder="tu_usuario">
+                </div>
+                <div class="input-group">
+                    <label for="c-email">Email</label>
+                    <input type="email" id="c-email" required placeholder="tu@email.com">
+                </div>
+                <div class="input-group">
+                    <label for="c-password">Contraseña</label>
+                    <input type="password" id="c-password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary w-full mt-4">Registrar como Cliente</button>
+            </form>
+
+            <!-- Formulario Negocio -->
+            <form id="form-negocio" style="display: none;">
+                <div class="input-group">
+                    <label for="n-username">Usuario sugerido</label>
+                    <input type="text" id="n-username" required placeholder="nombre_negocio">
+                </div>
+                <div class="input-group">
+                    <label for="n-business">Nombre del Negocio</label>
+                    <input type="text" id="n-business" required placeholder="Empresa S.A.">
+                </div>
+                <div class="input-group">
+                    <label for="n-rfc">RFC</label>
+                    <input type="text" id="n-rfc" required placeholder="ABC123456XYZ">
+                </div>
+                <div class="input-group">
+                    <label for="n-email">Email de contacto</label>
+                    <input type="email" id="n-email" required placeholder="contacto@negocio.com">
+                </div>
+                <p class="text-muted" style="font-size: 0.8rem; margin-top: 1rem;">
+                    * Las cuentas de negocio requieren aprobación del administrador. Una vez aprobada, recibirás tus credenciales por correo.
+                </p>
+                <button type="submit" class="btn btn-primary w-full mt-4">Solicitar Registro de Negocio</button>
+            </form>
+            
+            <div class="mt-4 text-center" style="font-size: 0.9rem;">
+                <span class="text-muted">¿Ya tienes cuenta?</span> 
+                <a href="/">Inicia Sesión</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchTab(type) {
+        const btnC = document.getElementById('tab-cliente');
+        const btnN = document.getElementById('tab-negocio');
+        const formC = document.getElementById('form-cliente');
+        const formN = document.getElementById('form-negocio');
+        
+        if (type === 'cliente') {
+            btnC.classList.add('active');
+            btnN.classList.remove('active');
+            formC.style.display = 'block';
+            formN.style.display = 'none';
+        } else {
+            btnN.classList.add('active');
+            btnC.classList.remove('active');
+            formN.style.display = 'block';
+            formC.style.display = 'none';
+        }
+    }
+
+    document.getElementById('form-cliente').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('c-username').value;
+        const email = document.getElementById('c-email').value;
+        const password = document.getElementById('c-password').value;
+        
+        try {
+            const res = await fetch(`/api/register/cliente?username=${username}&email=${email}&password=${password}`, { method: 'POST' });
+            const data = await res.json();
+            if (res.ok) {
+                document.getElementById('signup-success').textContent = data.message + '. Redirigiendo...';
+                document.getElementById('signup-success').style.display = 'block';
+                setTimeout(() => window.location.href = '/', 2000);
+            } else {
+                document.getElementById('signup-error').textContent = data.detail;
+                document.getElementById('signup-error').style.display = 'block';
+            }
+        } catch (e) { alert('Error de conexión'); }
+    });
+
+    document.getElementById('form-negocio').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('n-username').value;
+        const email = document.getElementById('n-email').value;
+        const business = document.getElementById('n-business').value;
+        const rfc = document.getElementById('n-rfc').value;
+        
+        try {
+            const res = await fetch(`/api/register/negocio?username=${username}&email=${email}&business_name=${business}&rfc=${rfc}`, { method: 'POST' });
+            const data = await res.json();
+            if (res.ok) {
+                document.getElementById('signup-success').textContent = data.message;
+                document.getElementById('signup-success').style.display = 'block';
+                document.getElementById('form-negocio').reset();
+            } else {
+                document.getElementById('signup-error').textContent = data.detail;
+                document.getElementById('signup-error').style.display = 'block';
+            }
+        } catch (e) { alert('Error de conexión'); }
+    });
+</script>
+{% endblock %}

@@ -1,6 +1,6 @@
 # AGENTS.md - Registro de Trabajo del Asistente
 
-Este archivo documenta el trabajo realizado por el asistente de IA en la refactorización y mejora del proyecto **Facturacion OCR**.
+Este archivo documenta el trabajo realizado por el asistente de IA en la refactorización y mejora del proyecto **Facturacion OCR**, incluyendo la implementación de facturación CFDI 4.0.
 
 ## Sesión Inicial: Análisis y Planificación
 
@@ -93,6 +93,39 @@ Este archivo documenta el trabajo realizado por el asistente de IA en la refacto
 - Export PDF con reportlab.
 - WebSockets para real-time updates.
 
+## Implementación CFDI 4.0 Gradual
+
+### Fase 1: Infraestructura Base CFDI (Completada)
+- **Modelos BD**: Tablas `cfdi_certificates`, `cfdi_invoices`, `cfdi_catalogs`, `cfdi_settings`.
+- **Encriptación**: Implementado `Fernet` para almacenamiento seguro de llaves privadas y passwords.
+- **Feature Flags**: Sistema para habilitar módulos gradualmente (`FeatureFlags` class).
+- **Testing Setup**: Tests de verificación de estructura (`test_cfdi_setup.py`).
+
+### Fase 2: Motor CFDI Core (Completada)
+- **Generador XML**: Clase `CFDIGenerator` para crear XML 4.0 con `lxml`.
+- **Gestor Certificados**: Clase `CertificateManager` para importación (validación fechas, extracción RFC) y firmado digital (SHA256).
+- **Validador**: Clase `CFDIValidator` para reglas de negocio y catálogos SAT.
+- **Testing Core**: Tests unitarios exitosos (`test_cfdi_core.py`) cubriendo generación, validación y firmado.
+
+### Fase 3: Integración Gradual con Facturama (Completada)
+- **Adaptador Facturama**: Clase `FacturamaAdapter` para sandbox y producción.
+- **Gestor PAC**: Clase `PACManager` con feature flags.
+- **API Routes**: Endpoints `/api/cfdi/generate` y `/api/cfdi/enable-feature` con control de acceso.
+- **Frontend Gradual**: Sistema de feature flags, UI progresiva, dashboard incremental.
+- **Testing**: Tests de integración funcionales con mocks inteligentes.
+- **Problema documentado**: Objeto de usuario desacoplado en entorno de prueba detectado y resuelto con placeholder.
+
+### Fase 4: Frontend Gradual (En Progreso - MIP)
+- **Sistema de Feature Flags**: Implementado en `frontend/static/js/feature_flags.js`.
+- **Dashboard Incremental**: Sección CFDI en `frontend/templates/dashboard.html` con formulario completo.
+- **Manejo de Certificados**: UI para subida de archivos .cer/.key con validación.
+- **Testing**: Tests de integración limpios y funcionales (`test_cfdi_routes.py`).
+
+### Fase 5: Migración y Testing Gradual (En Progreso - MIP)
+- **Migración BD**: Script `add_cfdi_tables.py` con tablas e índices.
+- **Testing CI/CD**: Configuración de GitHub Actions (pendiente ejecución).
+- **Validación**: Scáner de seguridad con Bandit (sin vulnerabilidades críticas).
+
 ## Repositorio Creado
 - `git init` y commit inicial.
 - `.gitignore` para excluir venv, outputs, etc.
@@ -105,7 +138,7 @@ Post-implementación de features, se recomienda un plan de 4 semanas para pulir 
 - Instalar y configurar Black, Flake8, MyPy, pre-commit hooks.
 - Formatear código y detectar issues iniciales.
 
-### Fase 2: Pulido de Código y Seguridad (Completada - 1 semana)
+### Fase 2: Pulido de Código y Seguridad (1 semana)
 - Agregados type hints completos en funciones clave.
 - Reemplazados prints con logging estructurado.
 - Implementado rate limiting (slowapi), sanitización de filenames.
@@ -137,13 +170,9 @@ Post-implementación de features, se recomienda un plan de 4 semanas para pulir 
 - Código modular, testeado, documentado.
 - Listo para deploy (Docker, Vercel).
 - Integrable con otros sistemas via API.
-
-## Notas del Asistente
-- Todas las implementaciones probadas con sintaxis/compilación.
-- Cambios no rompen funcionalidad existente.
-- Priorización por impacto: Web/API primero, luego mejoras internas.
+- Sistema CFDI 4.0 en proceso de integración gradual.
 
 ---
 
-**Actualizado:** 27 de Enero 2026
+**Actualizado:** 28 de Enero 2026
 **Asistente:** opencode

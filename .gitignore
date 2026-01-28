@@ -142,3 +142,9 @@ output/
 imagenes/
 *.db
 *.xlsx
+
+# Temporary and debug files
+*.tmp
+temp_*.py
+debug_*.py
+DELETE_ME*
