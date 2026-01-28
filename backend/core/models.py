@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import Column, DateTime, Float, Integer, String, Text, JSON
+from sqlalchemy.orm import relationship
 
 from .database import Base
 
@@ -35,6 +36,9 @@ class APIKey(Base):
     key = Column(String, unique=True)
     client_name = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relación con registros CSF
+    csf_records = relationship("CSFRecord", back_populates="user")
 
 
 class Invoice(Base):

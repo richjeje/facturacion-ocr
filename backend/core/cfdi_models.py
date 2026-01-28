@@ -25,11 +25,19 @@ class CFDICertificate(Base):
     # Método para desencriptar contenido
     def get_decrypted_key_content(self, master_key: str) -> bytes:
         fernet = Fernet(master_key.encode())
-        return fernet.decrypt(self.key_file_content)
+        content = self.key_file_content
+        if isinstance(content, bytes):
+            return fernet.decrypt(content)
+        else:
+            return fernet.decrypt(content.encode())
     
     def get_decrypted_password(self, master_key: str) -> str:
         fernet = Fernet(master_key.encode())
-        return fernet.decrypt(self.password_encrypted.encode()).decode()
+        content = self.password_encrypted
+        if isinstance(content, bytes):
+            return fernet.decrypt(content).decode()
+        else:
+            return fernet.decrypt(content.encode()).decode()
 
 class CFDIInvoice(Base):
     __tablename__ = "cfdi_invoices"
@@ -78,3 +86,84 @@ class CFDISettings(Base):
     feature_flags = Column(JSON, default={})  # Configuración de features
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow)
+
+# Modelos para CSF (Cédula de Identificación Fiscal)
+class CSFRecord(Base):
+    __tablename__ = "csf_records"
+    
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    rfc = Column(String(13), nullable=False, index=True)
+    curp = Column(String(18))
+    nombre_completo = Column(String(255), nullable=False)
+    primer_apellido = Column(String(100))
+    segundo_apellido = Column(String(100))
+    denominacion_razon_social = Column(String(255))
+    
+    # Domicilio fiscal
+    codigo_postal = Column(String(5))
+    calle = Column(String(255))
+    numero_exterior = Column(String(50))
+    numero_interior = Column(String(50))
+    colonia = Column(String(255))
+    localidad = Column(String(255))
+    municipio = Column(String(255))
+    estado = Column(String(100))
+    pais = Column(String(100), default="MEX")
+    
+    # Régimen fiscal
+    regimen_fiscal = Column(String(100))
+    regimen_fiscal_key = Column(String(3))
+    
+    # Estatus y validación
+    estatus = Column(String(20), default='active')  # active, inactive, suspended
+    fecha_inicio_operaciones = Column(Date)
+    ultima_actualizacion_sat = Column(DateTime)
+    
+    # Archivos CSF
+    cedula_pdf_path = Column(String(500))
+    cedula_qr_content = Column(Text)  # Contenido del código QR
+    cedula_xml_content = Column(Text) # XML del SAT (si está disponible)
+    
+    # Metadatos
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow)
+    verified_at = Column(DateTime)
+    is_verified = Column(Boolean, default=False)
+    
+    # Relaciones
+    user = relationship("User", back_populates="csf_records")
+
+class CSFValidationCache(Base):
+    __tablename__ = "csf_validation_cache"
+    
+    id = Column(Integer, primary_key=True)
+    rfc = Column(String(13), nullable=False, index=True)
+    validation_type = Column(String(50))  # rfc_format, curp_match, sat_lookup
+    result = Column(JSON)  # Resultado de la validación
+    is_valid = Column(Boolean)
+    error_message = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime)  # Cache TTL
+    
+    # Índices para performance
+    __table_args__ = (
+        {'schema': None}
+    )
+
+class CSFHistory(Base):
+    __tablename__ = "csf_history"
+    
+    id = Column(Integer, primary_key=True)
+    csf_record_id = Column(Integer, ForeignKey("csf_records.id", ondelete="CASCADE"))
+    rfc = Column(String(13))
+    field_name = Column(String(100))  # nombre, regimen_fiscal, etc.
+    old_value = Column(Text)
+    new_value = Column(Text)
+    change_reason = Column(String(255))
+    changed_by_user_id = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relaciones
+    csf_record = relationship("CSFRecord")
+    changed_by = relationship("User")

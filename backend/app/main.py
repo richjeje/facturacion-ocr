@@ -498,6 +498,10 @@ def create_manual_invoice(
     # This would create a new record in 'issued_invoices'
     return {"status": "success", "message": "Factura emitida (simulado)"}
 
+# Importar rutas CSF
+from .csf_routes import router as csf_router
+app.include_router(csf_router)
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
