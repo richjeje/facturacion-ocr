@@ -11,10 +11,10 @@ import os
 import shutil
 from datetime import datetime
 
-from ..core.database import get_db
-from ..core.profile_models import CSFDocument, CSFProfileHistory
-from ..core.models import User
-from ..parsing.csf_parser import CSFParser
+from backend.core.database import get_db
+from backend.core.profile_models import CSFDocument, CSFProfileHistory
+from backend.core.models import User
+from backend.parsing.csf_parser import CSFParser
 from .auth import get_current_user
 import logging
 

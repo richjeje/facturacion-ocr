@@ -4,16 +4,13 @@ from fastapi import (
     UploadFile,
     Depends,
     HTTPException,
-    status,
-    Header,
-    WebSocket,
-    Request,
+    Request
 )
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from starlette.responses import Response, StreamingResponse, HTMLResponse
-from fastapi.websockets import WebSocketDisconnect
+from fastapi.responses import JSONResponse
+from starlette.responses import HTMLResponse
 import uvicorn
 import os
 import json
@@ -499,11 +496,17 @@ def create_manual_invoice(
     return {"status": "success", "message": "Factura emitida (simulado)"}
 
 # Importar rutas CSF
-from .csf_routes import router as csf_router
-from .csf_profile_routes import router as csf_profile_router
+try:
+    from . import csf_routes
+    app.include_router(csf_routes.router)
+except ImportError as e:
+    print(f"Error importando csf_routes: {e}")
 
-app.include_router(csf_router)
-app.include_router(csf_profile_router)
+try:
+    from . import csf_profile_routes
+    app.include_router(csf_profile_routes.router)
+except ImportError as e:
+    print(f"Error importando csf_profile_routes: {e}")
 
 
 if __name__ == "__main__":
