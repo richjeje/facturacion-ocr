@@ -39,6 +39,9 @@ class APIKey(Base):
     
     # Relación con registros CSF
     csf_records = relationship("CSFRecord", back_populates="user")
+    
+    # Relación con documentos CSF
+    csf_documents = relationship("CSFDocument", back_populates="user")
 
 
 class Invoice(Base):

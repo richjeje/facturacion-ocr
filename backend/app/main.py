@@ -500,7 +500,10 @@ def create_manual_invoice(
 
 # Importar rutas CSF
 from .csf_routes import router as csf_router
+from .csf_profile_routes import router as csf_profile_router
+
 app.include_router(csf_router)
+app.include_router(csf_profile_router)
 
 
 if __name__ == "__main__":
