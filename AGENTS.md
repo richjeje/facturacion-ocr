@@ -266,8 +266,13 @@ Post-implementación de features, se recomienda un plan de 4 semanas para pulir 
 - **Listo para producción**: Integrado con CFDI y facturación existente.
 - **Deploy seguro**: Migración automática y rollback soportado.
 
----
+ ---
 
-**Actualizado:** 28 de Enero 2026  
-**Asistente:** opencode  
-**Módulo CSF:** ✅ Completado y probado
+ **Actualizado:** 28 de Enero 2026  
+ **Asistente:** opencode  
+ **Módulo CSF:** ✅ Completado y probado
+ 
+### Actualización de estado (Commit/Push)
+- Documenté en este archivo el estado de las modificaciones hasta la fecha.
+- Se realizó un commit con el mensaje: "docs: actualizar AGENTS.md con estado actual".
+- Se realizó push al remoto origin/main.
