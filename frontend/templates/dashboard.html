@@ -3,22 +3,7 @@
 {% block title %}Dashboard - Facturacion OCR{% endblock %}
 
 {% block content %}
-<style>
-  /* Minimal header + hide legacy sidebar for top nav */
-  .sidebar { display: none !important; }
-  .header { height: 64px; position: sticky; top: 0; z-index: 1000; display: flex; align-items: center; justify-content: space-between; padding: 0 1rem; background: #fff; border-bottom: 1px solid var(--border-dim); font-family: "DM Sans", sans-serif; }
-  .header-left { display: flex; align-items: center; gap: .5rem; }
-  .header-center { display: flex; gap: 1rem; align-items: center; justify-content: center; flex: 1; }
-  .header-right { display: flex; align-items: center; gap: .5rem; }
-  .nav-link { color: var(--muted); text-decoration: none; padding: 0.25rem 0.5rem; border-radius: 6px; }
-  .nav-link:hover { background: rgba(0,0,0,0.04); color: #111; }
-  .main-content { padding: 2rem; margin-left: 0; margin-top: 74px; width: 100%; }
-</style>
 
-<div id="site-header" class="header" role="banner" aria-label="Site header">
-  <div class="header-left">
-    <!-- Branding removed for cleaner header -->
-  </div>
   <div class="header-center" aria-label="Navegación principal" style="gap:1rem;">
     <nav class="nav-block" aria-label="Negocio" style="display:flex;gap:.75rem;align-items:center;">
       <a href="/negocio/emitir-factura" class="nav-link">Emitir Factura</a>
