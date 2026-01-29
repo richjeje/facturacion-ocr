@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Mi Perfil - Configuración{% endblock %}
+{% block content %}
+<div class="container" style="padding:2rem; max-width:1100px;">
+  <div class="profile-header" style="display:flex; align-items:center; gap:16px; padding:12px; border:1px solid var(--border-dim); border-radius:8px; background:#fff;">
+    {% if user.profile_photo %}
+    <img src="{{ user.profile_photo }}" alt="Perfil" style="width:100px; height:100px; border-radius:50%; object-fit:cover; border:2px solid #0d6efd;">
+    {% else %}
+    <div style="width:100px; height:100px; border-radius:50%; background:#ddd; display:flex; align-items:center; justify-content:center; font-size:40px; color:#555; border:2px solid #0d6efd;">U</div>
+    {% endif %}
+    <div>
+      <h2 style="margin:0;">Mi Perfil de Negocio</h2>
+      <p class="text-muted" style="margin:0;">{{ user.business_name or user.username }} - {{ user.business_rfc or '' }}</p>
+    </div>
+    <a href="/logout" class="btn btn-outline" style="margin-left:auto; font-weight:600;">Logout</a>
+  </div>
+  <h2 style="margin-top:16px;">Datos de la Empresa</h2>
+  <form id="perfil-form" class="card p-4" style="display:flex; flex-direction:column; gap:12px;">
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <div style="flex:1 1 260px; min-width:260px;">
+        <label>Nombre / Razón Social</label>
+        <input type="text" id="perf-name" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);" />
+      </div>
+      <div style="flex:1 1 260px; min-width:260px;">
+        <label>RFC</label>
+        <input type="text" id="perf-rfc" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);" />
+      </div>
+      <div style="flex:1 1 260px; min-width:260px;">
+        <label>Email</label>
+        <input type="email" id="perf-email" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);" />
+      </div>
+    </div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <div style="flex:1 1 260px; min-width:260px;">
+        <label>Teléfono</label>
+        <input type="text" id="perf-phone" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);" />
+      </div>
+      <div style="flex:1 1 360px; min-width:360px;">
+        <label>Domicilio</label>
+        <input type="text" id="perf-address" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);" />
+      </div>
+      <div style="flex:1 1 180px; min-width:180px;">
+        <label>Código Postal</label>
+        <input type="text" id="perf-postal" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);" />
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary" style="width:200px;">Guardar</button>
+  </form>
+  <div class="card mt-3 p-3" style="display:flex; align-items:center; gap:12px;">
+    <div>Constancia de Situación Fiscal (PDF)</div>
+    <input type="file" accept="application/pdf" style="display:inline-block;" />
+    <button class="btn btn-outline" style="margin-left:auto;">Agregar Nuevo PDF</button>
+    <button class="btn btn-outline" style="margin-left:8px;">Logout</button>
+  </div>
+</div>
+{% endblock %}

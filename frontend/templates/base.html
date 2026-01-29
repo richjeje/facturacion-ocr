@@ -10,9 +10,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    {% block content %}{% endblock %}
-    
-    <!-- Global Notifications -->
+    <!-- Header (top navigation and actions) -->
+    <header class="header" role="navigation" aria-label="Site header" style="position: sticky; top: 0; z-index: 1000;">
+        <div class="header-left" style="display:flex; align-items:center; gap:10px;">
+            <a href="/dashboard" class="btn-header" style="padding:8px 12px; border-radius:6px; text-decoration:none; color:white; background: rgba(0,0,0,0.15);">Dashboard</a>
+        </div>
+        <nav class="header-center" aria-label="Navegación principal" style="display:flex; gap:12px; align-items:center; justify-content:center; flex:1;">
+            <a href="/negocio/emitir-factura" class="nav-link">Emitir Factura</a>
+            <a href="/negocio/facturar-gastos" class="nav-link">Facturar Gastos</a>
+            <a href="/negocio/mis-facturas" class="nav-link">Mis Facturas</a>
+            <a href="/negocio/mis-clientes" class="nav-link">Mis Clientes</a>
+        </nav>
+        <div class="header-right" style="display:flex; align-items:center; gap:8px;">
+            <button id="notif-btn" class="icon-btn" aria-label="Notificaciones" style="background:transparent;border:0; color:white; position:relative;">
+                <i class="fas fa-bell"></i>
+                <span id="notif-count" class="badge" style="display:none; position:absolute; top:-6px; right:-6px; background:#f87171; color:white; border-radius:999px; padding:2px 6px; font-size:10px;">0</span>
+            </button>
+            <a href="/configuracion/perfil" class="avatar-link" aria-label="Perfil" style="color:white; text-decoration:none; display:inline-flex; align-items:center; padding:6px 8px; border-radius:6px; border:1px solid rgba(255,255,255,.3);">Perfil</a>
+        </div>
+    </header>
+
+    <!-- Global Notifications (accessible globally) -->
     <div id="global-notifications" class="flex-col gap-2" style="position: fixed; top: 1rem; right: 1rem; width: 300px; z-index: 9999; display: none;">
         <div class="card p-2">
             <div class="flex justify-between items-center mb-2">
@@ -22,7 +40,6 @@
             <div id="not-list"></div>
         </div>
     </div>
-
     <script>
         async function fetchNotifications() {
             try {

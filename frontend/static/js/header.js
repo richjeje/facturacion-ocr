@@ -79,4 +79,16 @@
       }
     });
   }
+
+  // Initial: hide notifs badge if zero
+  const nb = document.getElementById('notif-count');
+  if (nb) {
+    try {
+      const v = parseInt(nb.textContent || '0', 10);
+      if (!v || v <= 0) nb.style.display = 'none';
+      else nb.style.display = 'inline-block';
+    } catch (_) {
+      nb.style.display = 'none';
+    }
+  }
 })();

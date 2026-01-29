@@ -276,6 +276,62 @@ def dashboard(request: Request, username: str = Depends(verify_token), db: Sessi
     user = db.query(User).filter(User.username == username).first()
     return templates.TemplateResponse("dashboard.html", {"request": request, "user": user})
 
+@app.get("/negocio/emitir-factura", response_class=HTMLResponse)
+def negocio_emitir_factura_page(request: Request, username: str = Depends(verify_token), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == username).first()
+    if not user or user.role != 'negocio':
+        raise HTTPException(status_code=403, detail="No autorizado")
+    return templates.TemplateResponse("negocio_emitir_factura.html", {"request": request, "user": user})
+
+@app.get("/negocio/facturar-gastos", response_class=HTMLResponse)
+def negocio_facturar_gastos_page(request: Request, username: str = Depends(verify_token), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == username).first()
+    if not user or user.role != 'negocio':
+        raise HTTPException(status_code=403, detail="No autorizado")
+    return templates.TemplateResponse("negocio_facturar_gastos.html", {"request": request, "user": user})
+
+@app.get("/negocio/mis-facturas", response_class=HTMLResponse)
+def negocio_mis_facturas_page(request: Request, username: str = Depends(verify_token), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == username).first()
+    if not user or user.role != 'negocio':
+        raise HTTPException(status_code=403, detail="No autorizado")
+    return templates.TemplateResponse("negocio_mis_facturas.html", {"request": request, "user": user})
+
+@app.get("/negocio/mis-clientes", response_class=HTMLResponse)
+def negocio_mis_clientes_page(request: Request, username: str = Depends(verify_token), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == username).first()
+    if not user or user.role != 'negocio':
+        raise HTTPException(status_code=403, detail="No autorizado")
+    return templates.TemplateResponse("negocio_mis_clientes.html", {"request": request, "user": user})
+
+# --- New routes for moved content (mobile-friendly navigation) ---
+@app.get("/negocio/emitir-factura", response_class=HTMLResponse)
+def negocio_emitir_factura_page(request: Request, username: str = Depends(verify_token), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == username).first()
+    return templates.TemplateResponse("negocio_emitir_factura.html", {"request": request, "user": user})
+
+@app.get("/negocio/facturar-gastos", response_class=HTMLResponse)
+def negocio_facturar_gastos_page(request: Request, username: str = Depends(verify_token), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == username).first()
+    return templates.TemplateResponse("negocio_facturar_gastos.html", {"request": request, "user": user})
+
+@app.get("/negocio/mis-facturas", response_class=HTMLResponse)
+def negocio_mis_facturas_page(request: Request, username: str = Depends(verify_token), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == username).first()
+    return templates.TemplateResponse("negocio_mis_facturas.html", {"request": request, "user": user})
+
+@app.get("/negocio/mis-clientes", response_class=HTMLResponse)
+def negocio_mis_clientes_page(request: Request, username: str = Depends(verify_token), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == username).first()
+    return templates.TemplateResponse("negocio_mis_clientes.html", {"request": request, "user": user})
+
+# Removed: Cliente-focused routes (not exposed in this phase)
+
+@app.get("/configuracion/perfil", response_class=HTMLResponse)
+def configuracion_perfil_page(request: Request, username: str = Depends(verify_token), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == username).first()
+    return templates.TemplateResponse("config_perfil.html", {"request": request, "user": user})
+
 
 
 
@@ -508,6 +564,12 @@ def get_issued_invoices(username: str = Depends(verify_token), db: Session = Dep
     return {"status": "success", "data": []}
 
 
+@app.get("/api/notifications")
+def api_notifications(username: str = Depends(verify_token)):
+    # Simple placeholder for frontend notifications
+    return {"notifications": []}
+
+
 @app.post("/api/invoicing")
 def create_manual_invoice(
     concept: str, 
@@ -518,6 +580,86 @@ def create_manual_invoice(
 ):
     # This would create a new record in 'issued_invoices'
     return {"status": "success", "message": "Factura emitida (simulado)"}
+
+
+# Mock endpoints for dynamic data (UI mock)
+@app.get("/api/mock/business-clients")
+def mock_business_clients():
+    return {
+        "clients": [
+            {
+                "id": 1,
+                "name": "ACME SA de CV",
+                "rfc": "ACME010101AAA",
+                "address": {
+                    "street": "Avenida Reforma",
+                    "exterior": "123",
+                    "interior": "",
+                    "neighborhood": "Centro",
+                    "city": "Guadalajara",
+                    "state": "Jalisco",
+                    "postal": "44100"
+                },
+                "regimen": "601 - General de Ley Personas Morales",
+                "uso_cfdi": "G03",
+                "phone": "33-1234-5678",
+                "email": "contacto@acme.example"
+            },
+            {
+                "id": 2,
+                "name": "Globex Corp",
+                "rfc": "GLOB020202BBB",
+                "address": {
+                    "street": "Calle Falsa",
+                    "exterior": "742",
+                    "interior": "",
+                    "neighborhood": "N/A",
+                    "city": "Monterrey",
+                    "state": "Nuevo León",
+                    "postal": "64000"
+                },
+                "regimen": "601 - General de Ley Personas Morales",
+                "uso_cfdi": "G03",
+                "phone": "81-5555-2222",
+                "email": "info@globex.example"
+            }
+        ]
+    }
+
+@app.get("/api/mock/business-invoices")
+def mock_business_invoices():
+    return {
+        "invoices": [
+            {"id": 101, "fecha": "2026-01-01", "cliente": "ACME SA de CV", "rfc": "ACME010101AAA", "folio": "INV-101", "total": 1000.0, "concepto": "Venta de producto", "subtotal": 900.0, "iva": 100.0, "tipo": "emitida"},
+            {"id": 102, "fecha": "2026-01-02", "cliente": "Globex Corp", "rfc": "GLOB020202BBB", "folio": "INV-102", "total": 500.0, "concepto": "Servicios", "subtotal": 450.0, "iva": 50.0, "tipo": "emitida"}
+        ]
+    }
+
+@app.get("/api/mock/client-invoices")
+def mock_client_invoices():
+    return {
+        "invoices": [
+            {"id": 201, "fecha": "2026-01-03", "factura": "CLI-001", "total": 250.0},
+        ]
+    }
+
+@app.get("/api/mock/profile")
+def mock_profile():
+    return {
+        "username": "vanta",
+        "full_name": "Vanta",
+        "rfc": "VANTA123456",
+        "email": "contact@vanta.example"
+    }
+
+@app.get("/api/mock/notifications")
+def mock_notifications():
+    return {
+        "notifications": [
+            {"id":1, "title":"Factura enviada", "message":"Se envió la factura INV-101", "created_at": "2026-01-01T12:00:00Z"},
+            {"id":2, "title":"Factura recibida", "message":"Se recibió la factura INV-202", "created_at": "2026-01-02T09:00:00Z"}
+        ]
+    }
 
 # Rutas simplificadas para CSF Profile
 @app.post("/api/profile/upload-csf")
