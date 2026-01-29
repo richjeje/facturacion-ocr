@@ -1,0 +1,28 @@
+/* Minimal header styles for top navigation; can be enhanced later */
+.header {
+  height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  background: #fff;
+  border-bottom: 1px solid var(--border-dim);
+  font-family: "DM Sans", sans-serif;
+  transition: transform 0.25s ease;
+}
+.header-left { display: flex; align-items: center; gap: .5rem; }
+.header-center { display: flex; gap: 1rem; align-items: center; justify-content: center; flex: 1; }
+.header-right { display: flex; align-items: center; gap: .5rem; }
+.mobile-only { display:none; }
+.mobile-drawer { display:none; }
+@media (max-width: 900px) {
+  .header-center { display:none; }
+  .mobile-only { display:inline-flex; }
+  .mobile-drawer { display:block; }
+}
+.nav-link { color: var(--muted); text-decoration: none; padding: .25rem .5rem; border-radius: 6px; }
+.nav-link:hover { background: rgba(0,0,0,0.04); color: #111; }
+.avatar, .avatar-link .avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #999; }

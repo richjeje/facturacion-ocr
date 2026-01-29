@@ -4,146 +4,50 @@
 
 {% block content %}
 <style>
-    .sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 260px;
-        height: 100vh;
-        background: rgba(255, 255, 255, 0.02);
-        backdrop-filter: blur(20px);
-        border-right: 1px solid var(--border-dim);
-        padding: 2rem 1.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .nav-item {
-        padding: 1rem;
-        border-radius: 8px;
-        color: var(--muted);
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .nav-item:hover, .nav-item.active {
-        background: rgba(122, 44, 255, 0.1);
-        color: white;
-    }
-
-    .dashboard-container {
-        display: flex;
-        min-height: 100vh;
-    }
-
-    .main-content {
-        margin-left: 260px;
-        padding: 2rem;
-        flex: 1;
-        width: calc(100% - 260px);
-    }
-
-    .page-section {
-        display: none;
-    }
-
-    .page-section.active {
-        display: block;
-    }
-
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .drop-zone {
-        border: 2px dashed var(--border-dim);
-        border-radius: 12px;
-        padding: 3rem;
-        text-align: center;
-        transition: border-color 0.2s;
-        background: rgba(0,0,0,0.2);
-    }
-
-    .drop-zone.dragover {
-        border-color: var(--mist-purple);
-        background: rgba(122, 44, 255, 0.05);
-    }
+  /* Minimal header + hide legacy sidebar for top nav */
+  .sidebar { display: none !important; }
+  .header { height: 64px; position: sticky; top: 0; z-index: 1000; display: flex; align-items: center; justify-content: space-between; padding: 0 1rem; background: #fff; border-bottom: 1px solid var(--border-dim); font-family: "DM Sans", sans-serif; }
+  .header-left { display: flex; align-items: center; gap: .5rem; }
+  .header-center { display: flex; gap: 1rem; align-items: center; justify-content: center; flex: 1; }
+  .header-right { display: flex; align-items: center; gap: .5rem; }
+  .nav-link { color: var(--muted); text-decoration: none; padding: 0.25rem 0.5rem; border-radius: 6px; }
+  .nav-link:hover { background: rgba(0,0,0,0.04); color: #111; }
+  .main-content { padding: 2rem; margin-left: 0; margin-top: 74px; width: 100%; }
 </style>
 
-<div class="dashboard-container">
-<div class="sidebar">
-    <div class="logo-text" style="font-size: 1.2rem; text-align: left; margin-bottom: 1rem;">MISTICA OCR</div>
-    
-    <div class="flex-col items-center mb-4 p-2 card" style="border: none; background: rgba(255,255,255,0.05);">
-        {% if user.profile_photo %}
-        <img id="side-profile-photo" src="{{ user.profile_photo }}" 
-             style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--mist-purple);">
-        {% else %}
-        <div id="side-profile-photo-placeholder" style="width: 80px; height: 80px; border-radius: 50%; background: var(--mist-purple); display: flex; align-items: center; justify-content: center; font-size: 2rem; border: 2px solid rgba(255,255,255,0.1);">
-            <i class="fas fa-user"></i>
-        </div>
-        <img id="side-profile-photo" src="" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--mist-purple); display: none;">
-        {% endif %}
-        <div class="mt-2 text-center">
-            <div style="font-weight: bold; font-size: 0.9rem;">{{ user.username }}</div>
-            <div class="text-muted" style="font-size: 0.75rem;">{{ user.role | capitalize }}</div>
-        </div>
-    </div>
-
-    <div class="nav-item active" onclick="switchPage('upload')">
-        <i class="fas fa-plus-circle"></i> Nueva Factura
-    </div>
-    <div class="nav-item" onclick="switchPage('invoicing')">
-        <i class="fas fa-file-invoice-dollar"></i> Facturar
-    </div>
-    <div class="nav-item" onclick="switchPage('history')">
-        <i class="fas fa-history"></i> Historial Recibidas
-    </div>
-    <div class="nav-item" onclick="switchPage('issued')">
-        <i class="fas fa-paper-plane"></i> Facturas Emitidas
-    </div>
-    
-    <div class="nav-item" onclick="switchPage('profile')">
-        <i class="fas fa-user-circle"></i> Mi Perfil
-    </div>
-
-    {% if user.role == 'negocio' %}
-    <div class="nav-item" onclick="switchPage('clients')">
-        <i class="fas fa-users"></i> Mis Clientes
-    </div>
-    <div class="nav-item" onclick="window.location.href='/business/profile'">
-        <i class="fas fa-file-invoice"></i> Perfil de Negocio
-    </div>
-    {% endif %}
-
-    {% if user.role == 'cliente' %}
-    <div class="nav-item" onclick="window.location.href='/business/profile'">
-        <i class="fas fa-file-invoice"></i> Mi Constancia Fiscal
-    </div>
-    {% endif %}
-
-    {% if user.role == 'admin' %}
-    <div class="nav-item" onclick="window.location.href='/admin/dashboard'">
-        <i class="fas fa-user-shield"></i> Administración
-    </div>
-    {% endif %}
-
-    <div class="nav-item" onclick="switchPage('settings')">
-        <i class="fas fa-cog"></i> Configuración
-    </div>
-    
-    <div style="margin-top: auto;">
-        <div class="nav-item" onclick="logout()">
-            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-        </div>
-    </div>
+<div id="site-header" class="header" role="banner" aria-label="Site header">
+  <div class="header-left">
+    <!-- Branding removed for cleaner header -->
+  </div>
+  <div class="header-center" aria-label="Navegación principal" style="gap:1rem;">
+    <nav class="nav-block" aria-label="Negocio" style="display:flex;gap:.75rem;align-items:center;">
+      <a href="/negocio/emitir-factura" class="nav-link">Emitir Factura (Negocio)</a>
+      <a href="/negocio/facturar-gastos" class="nav-link">Facturar Gastos</a>
+      <a href="/negocio/mis-facturas" class="nav-link">Mis Facturas (Negocio)</a>
+      <a href="/negocio/mis-clientes" class="nav-link">Mis Clientes</a>
+    </nav>
+  <nav class="nav-block" aria-label="Clientes" style="display:flex;gap:.75rem;align-items:center;">
+      <a href="/clientes/emitir-factura" class="nav-link">Emitir Factura (Clientes)</a>
+      <a href="/clientes/mis-facturas" class="nav-link">Mis Facturas (Clientes)</a>
+    </nav>
+  </div>
+  <div class="header-right">
+    <button aria-label="Notificaciones" id="notif-btn" class="icon-btn" style="background:transparent;border:none;cursor:pointer;position:relative;">
+      <i class="fas fa-bell"></i>
+      <span id="notif-count" class="badge" style="display:none; position:absolute; top:-6px; right:-6px; background:red; color:white; border-radius:999px; padding:2px 6px; font-size:10px;">0</span>
+    </button>
+    <a href="/configuracion/perfil" aria-label="Perfil" class="avatar-link" style="display:inline-flex; align-items:center; text-decoration:none; color:inherit;">
+      {% if user.profile_photo %}
+      <img src="{{ user.profile_photo }}" class="avatar" alt="Perfil" style="width:28px;height:28px;border-radius:50%;border:1px solid #999;">
+      {% else %}
+      <span class="avatar" style="width:28px;height:28px;border-radius:50%; background:#999; display:inline-flex; align-items:center; justify-content:center; color:white; font-weight:bold;">U</span>
+      {% endif %}
+    </a>
+    <a href="/logout" aria-label="Logout" class="icon-btn" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:6px;"><i class="fas fa-sign-out-alt"></i></a>
+  </div>
+  <!-- Mobile menu button (visible on small screens) -->
+  <button id="mobile-menu-btn" aria-label="Menu" class="mobile-only" style="display:none; border:none; background:transparent; font-size:1.25rem; margin-right: .5rem; cursor:pointer;"><i class="fas fa-bars"></i></button>
+  <div id="mobile-menu" class="mobile-drawer" style="display:none; position: fixed; top: 64px; left: 0; width: 260px; height: calc(100vh - 64px); background:#fff; border-right: 1px solid var(--border-dim); z-index: 9999; overflow:auto; transform: translateX(-110%); transition: transform 0.25s ease;"></div>
 </div>
 
 <div class="main-content">
