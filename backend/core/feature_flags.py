@@ -1,6 +1,7 @@
 # backend/core/feature_flags.py
 from sqlalchemy.orm import Session
 from .cfdi_models import CFDISettings
+from typing import Optional
 import json
 
 class FeatureFlags:
@@ -43,3 +44,7 @@ class FeatureFlags:
             flags[flag] = False
             settings.feature_flags = flags
             db.commit()
+
+def get_user_settings(user_id: int, db: Session) -> Optional[CFDISettings]:
+    """Get CFDI settings for a user"""
+    return db.query(CFDISettings).filter(CFDISettings.user_id == user_id).first()

@@ -1,11 +1,19 @@
 {% extends "base.html" %}
 
-{% block title %}Perfil de Negocio - Facturacion OCR{% endblock %}
+{% block title %}
+{% if user.role == 'negocio' %}Perfil de Negocio{% else %}Mi Constancia Fiscal{% endif %} - Facturacion OCR
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4" style="max-width: 900px;">
     <div class="flex justify-between items-center mb-4">
-        <h2>Perfil de Negocio</h2>
+        <h2>
+            {% if user.role == 'negocio' %}
+                🏢 Perfil de Negocio
+            {% else %}
+                👤 Mi Constancia Fiscal
+            {% endif %}
+        </h2>
         <a href="/dashboard" class="btn btn-outline">Ir al Dashboard</a>
     </div>
 
@@ -19,12 +27,24 @@
     <!-- Sección CSF -->
     <div class="card mb-4">
         <div class="card-header">
-            <h3>📋 Gestión de Constancias Fiscales</h3>
+            <h3>
+                {% if user.role == 'negocio' %}
+                    📋 Gestión de Constancias Fiscales
+                {% else %}
+                    📋 Mi Constancia de Situación Fiscal
+                {% endif %}
+            </h3>
         </div>
         
         <!-- Área de Subida -->
         <div class="csf-upload-section">
-            <p class="muted mb-3">Sube tu Constancia de Situación Fiscal (PDF) para auto-llenar tus datos.</p>
+            <p class="muted mb-3">
+                {% if user.role == 'negocio' %}
+                    Sube tu Constancia de Situación Fiscal (PDF) para auto-llenar los datos de tu negocio.
+                {% else %}
+                    Sube tu Constancia de Situación Fiscal (PDF) para actualizar tu información fiscal.
+                {% endif %}
+            </p>
             
             <div class="file-upload-zone" id="csf-upload-area">
                 <div class="upload-content">

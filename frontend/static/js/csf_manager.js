@@ -24,7 +24,7 @@ class CSFManager {
         uploadArea.addEventListener('click', () => fileInput.click());
         uploadArea.addEventListener('dragover', this.handleDragOver.bind(this));
         uploadArea.addEventListener('drop', this.handleDrop.bind(this));
-        uploadInput.addEventListener('change', (e) => this.handleFileSelect(e.target.files[0]));
+        fileInput.addEventListener('change', (e) => this.handleFileSelect(e.target.files[0]));
         
         // Prevenir drag por defecto
         document.addEventListener('dragover', (e) => e.preventDefault());

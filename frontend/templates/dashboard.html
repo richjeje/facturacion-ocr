@@ -118,6 +118,15 @@
     <div class="nav-item" onclick="switchPage('clients')">
         <i class="fas fa-users"></i> Mis Clientes
     </div>
+    <div class="nav-item" onclick="window.location.href='/business/profile'">
+        <i class="fas fa-file-invoice"></i> Perfil de Negocio
+    </div>
+    {% endif %}
+
+    {% if user.role == 'cliente' %}
+    <div class="nav-item" onclick="window.location.href='/business/profile'">
+        <i class="fas fa-file-invoice"></i> Mi Constancia Fiscal
+    </div>
     {% endif %}
 
     {% if user.role == 'admin' %}

@@ -1,9 +1,12 @@
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Float, Integer, String, Text, JSON
+from sqlalchemy import Column, DateTime, Float, Integer, String, Text, JSON, ForeignKey
 from sqlalchemy.orm import relationship
 
 from .database import Base
+
+# Importar modelos relacionados para evitar referencias circulares
+# (definimos relaciones como strings y SQLAlchemy las resuelve después)
 
 
 class User(Base):
@@ -26,6 +29,10 @@ class User(Base):
     postal_code = Column(String, nullable=True)
     
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relaciones con CSF (definidas como strings para evitar importación cíclica)
+    # Las relaciones se configuran en all_models.py para resolver dependencias
+    pass
 
 
 
@@ -37,11 +44,8 @@ class APIKey(Base):
     client_name = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
     
-    # Relación con registros CSF
-    csf_records = relationship("CSFRecord", back_populates="user")
-    
-    # Relación con documentos CSF
-    csf_documents = relationship("CSFDocument", back_populates="user")
+    # Relación con usuarios (si se necesita en el futuro)
+    # user_id = Column(Integer, ForeignKey("users.id"))
 
 
 class Invoice(Base):
