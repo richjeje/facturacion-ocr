@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+{% if show_header is not defined or show_header %}
     <!-- Header (top navigation and actions) -->
     <header class="header" role="navigation" aria-label="Site header" style="position: sticky; top: 0; z-index: 1000;">
         <div class="header-left" style="display:flex; align-items:center; gap:10px;">
@@ -29,6 +30,7 @@
             <a href="/configuracion/perfil" class="avatar-link" aria-label="Perfil" style="color:white; text-decoration:none; display:inline-flex; align-items:center; padding:6px 8px; border-radius:6px; border:1px solid rgba(255,255,255,.3);">Perfil</a>
         </div>
     </header>
+{% endif %}
 
     <!-- Global Notifications (accessible globally) -->
     <div id="global-notifications" class="flex-col gap-2" style="position: fixed; top: 1rem; right: 1rem; width: 300px; z-index: 9999; display: none;">
@@ -40,6 +42,7 @@
             <div id="not-list"></div>
         </div>
     </div>
+    {% block content %}{% endblock %}
     <!-- Login/Auth logic (if not already logged in, show login page) -->
     <script>
         // Simple auth check; if no token -> redirect to login
@@ -81,6 +84,6 @@
             setInterval(fetchNotifications, 30000);
         }
     </script>
+    <script src="/static/js/header.js"></script>
 </body>
-<script src="/static/js/header.js"></script>
 </html>
