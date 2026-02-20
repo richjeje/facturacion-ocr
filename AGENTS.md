@@ -12,10 +12,13 @@ Documento central del proyecto. Combina guía de uso, arquitectura, historial de
 4. [Estructura del proyecto](#estructura-del-proyecto)
 5. [Configuración](#configuración)
 6. [Despliegue](#despliegue)
-7. [Tests](#tests)
-8. [Changelog](#changelog)
-9. [Pendientes](#pendientes)
-10. [Registro del asistente IA](#registro-del-asistente-ia)
+7. [Solución de problemas](#solución-de-problemas)
+8. [Base de datos — Neon PostgreSQL](#base-de-datos--neon-postgresql)
+9. [Frontend / UI](#frontend--ui)
+10. [Tests](#tests)
+11. [Changelog](#changelog)
+12. [Pendientes](#pendientes)
+13. [Registro del asistente IA](#registro-del-asistente-ia)
 
 ---
 
@@ -193,6 +196,104 @@ bash deploy.sh
 
 ---
 
+## Solución de problemas
+
+### Puerto 8000 ocupado
+
+```bash
+# Ver qué proceso usa el puerto
+netstat -ano | findstr :8000
+# Matar el proceso (reemplaza PID)
+taskkill /PID <PID> /F
+```
+
+### Python no está en PATH (Windows)
+
+1. Busca la instalación de Python en el sistema.
+2. Agrégala al PATH en Variables de Entorno.
+3. Reinicia la terminal.
+
+### Errores de dependencias
+
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### Errores SQLAlchemy — relaciones cíclicas
+
+- **Síntoma**: `User` con relaciones a `CSFDocument`/`CSFRecord` que no están disponibles al inicio.
+- **Solución**: Las relaciones deben definirse en sus modelos propios, no en `User`. Ver `backend/core/all_models.py`.
+- **Causa original**: importación circular entre modelos; resuelta al separar `all_models.py`.
+
+### Módulo `qrcode` no encontrado
+
+```bash
+pip install "qrcode[pil]"
+```
+
+---
+
+## Base de datos — Neon PostgreSQL
+
+### Tablas creadas en producción
+
+| Tabla | Propósito |
+|---|---|
+| `Users` | Gestión de usuarios y roles |
+| `APIKeys` | Claves de API por cliente |
+| `Invoices` | Facturas OCR procesadas |
+| `CFDICertificates` | Certificados digitales CFDI 4.0 |
+| `CFDIInvoice` | Facturas CFDI generadas |
+| `CFDICatalogs` | Catálogos SAT |
+| `CFDISettings` | Configuración PAC y features |
+| `CSFRecord` | Registros CSF principales |
+| `CSFValidationCache` | Caché de validaciones CSF |
+| `CSFHistory` | Historial de cambios CSF |
+| `CSFDocument` | Documentos CSF subidos |
+| `CSFProfileHistory` | Historial de aplicación CSF |
+
+### Estado de la migración
+
+- Conexión SSL configurada correctamente (endpoint `ep-misty-morning-ahjog2u0-pooler`).
+- Usuarios de base: `admin` / `admin123` y `vanta`.
+- Backup automático provisto por Neon; datos persistentes entre reinicios.
+- Configuración en `.env` → variable `DATABASE_URL`.
+
+### Seguridad
+
+- SSL requerido en todas las conexiones a Neon.
+- No almacenar credenciales en el código; usar `.env` (ver `.env.example`).
+
+---
+
+## Frontend / UI
+
+- Los templates HTML son servidos directamente por FastAPI (carpeta `frontend/templates/`).
+- Los assets estáticos (CSS, JS) están en `frontend/static/`.
+- El directorio `frontend/static/js/` contiene los archivos JavaScript del dashboard.
+
+### Rutas del frontend
+
+| Ruta | Vista |
+|---|---|
+| `/` | Redirect a login o dashboard |
+| `/login` | Formulario de login |
+| `/dashboard` | Dashboard principal con gráficos |
+| `/negocio/emitir-factura` | Emisión de facturas CFDI |
+| `/negocio/facturar-gastos` | Registro de gastos |
+| `/negocio/mis-facturas` | Listado de facturas |
+| `/negocio/mis-clientes` | Gestión de clientes |
+| `/configuracion/perfil` | Perfil CSF y configuración |
+
+### Notas de UI
+
+- Header condicional: oculto en la pantalla de login, visible en el resto.
+- Notificaciones: placeholder activo, integración real pendiente.
+- Mocks dinámicos activos en rutas de Negocio mientras se completa la integración backend.
+
+---
+
 ## Tests
 
 ```bash
@@ -324,7 +425,8 @@ Los tests se ejecutan automáticamente en GitHub Actions (`.github/workflows/ci.
 - Actualizado `docker-compose.yml` con `uvicorn` y `env_file`.
 - Creado `.env.example`.
 - Consolidados todos los `.md` en este archivo.
-### Sesión 3 — Merge con remote + commit/push (2026-02-20)
+
+### Sesión 3 — Migración Neon + features CFDI/CSF (remote, antes del merge)
 
 **Situación encontrada:**
 El remote (`origin/main`) tenía 14 commits nuevos con features de CFDI/CSF, nuevos tests y scripts de arranque (`start.py`, `start_server.py`). Conflictos en `AGENTS.md`, `.gitignore`, `config.py`, `tasks.py`. El remote había eliminado `main.py` y `web_app.py` (reemplazados por `start*.py`).
@@ -338,6 +440,18 @@ El remote (`origin/main`) tenía 14 commits nuevos con features de CFDI/CSF, nue
 **Commits creados:**
 1. `refactor: reestructuracion con buenas practicas` — 33 archivos, 863 inserciones, 1223 eliminaciones.
 2. `merge: integrar cambios remotos conservando reestructuracion local` — merge commit.
+3. `fix: corregir referencias backend.app → backend.api en start.py y start_server.py`.
+
+### Sesión 4 — Fusión de .md restantes (2026-02-20)
+
+**Archivos fusionados y eliminados:**
+- `FINAL_SOLUTION.md` → errores SQLAlchemy resueltos, estado servidor → sección «Solución de problemas».
+- `MIGRACION_COMPLETA.md` → estado migración Neon → sección «Base de datos — Neon PostgreSQL».
+- `MIGRATION_NEON_COMPLETE.md` → tablas creadas, conexión SSL, usuarios → misma sección.
+- `START_GUIDE.md` → scripts de arranque, troubleshooting → secciones «Uso» y «Solución de problemas».
+- `docs/CHANGELOG.md` → notas de limpieza UI y rutas Negocio → sección «Frontend / UI».
+- `docs/README.md` → descripción general → absorbida por sección «¿Qué es este proyecto?».
+- `frontend/static/js/README.md` → nota de directorio → sección «Frontend / UI».
 
 ---
 
