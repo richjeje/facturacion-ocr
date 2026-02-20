@@ -61,7 +61,7 @@ cp .env.example .env
 
 ```bash
 # Coloca facturas en imagenes/ (PDF, JPG, PNG, DOCX, PPTX)
-python main.py
+python -m backend.cli.main
 # Ingresa cuántos archivos procesar (Enter = todos)
 # Resultado: output/facturas_procesadas.xlsx + base de datos
 ```
@@ -69,7 +69,12 @@ python main.py
 ### Web / API
 
 ```bash
-# Servidor web
+# Opcion A: script todo-en-uno (backend + frontend)
+python start.py
+
+# Opcion B: solo servidor web
+python start_server.py
+# o directamente:
 uvicorn backend.api.main:app --reload
 
 # Worker Celery (en otra terminal)
@@ -103,6 +108,7 @@ facturacion-ocr/
 │   │   ├── config.py     # Config central (env + data/*.json)
 │   │   ├── database.py   # SQLAlchemy engine + session
 │   │   ├── models.py     # ORM: User, APIKey, Invoice
+│   │   ├── all_models.py # Modelos extendidos (CFDI, CSF, etc.)
 │   │   ├── persistence.py# save_to_database()
 │   │   └── utils.py      # Excepciones custom + helpers de texto
 │   ├── ocr/              # Extracción de texto
@@ -117,12 +123,25 @@ facturacion-ocr/
 │   ├── templates/        # HTML servido por FastAPI
 │   └── static/           # CSS, JS, assets
 ├── tests/                # Tests con pytest
+│   ├── test_extractor.py
+│   ├── test_processor.py
+│   ├── test_integration.py
+│   ├── test_api.py
+│   ├── test_api_v2.py
+│   ├── test_cfdi_core.py
+│   ├── test_cfdi_routes.py
+│   ├── test_cfdi_setup.py
+│   ├── test_csf_integration.py
+│   ├── test_csf_profile_integration.py
+│   ├── test_csf_validator.py
+│   └── sample_invoice.txt
 ├── .env.example          # Variables de entorno documentadas
 ├── docker-compose.yml    # Orquestación local (web + worker + db + redis)
 ├── Dockerfile
 ├── requirements.txt
-├── main.py               # Entry point CLI
-└── web_app.py            # Entry point Web (uvicorn)
+├── start.py              # Entry point: arranca backend + frontend simultaneamente
+├── start_server.py       # Entry point: solo servidor web (uvicorn)
+└── test_server.py        # Script de prueba de servidor
 ```
 
 ---
@@ -188,6 +207,18 @@ Los tests se ejecutan automáticamente en GitHub Actions (`.github/workflows/ci.
 ---
 
 ## Changelog
+
+### [1.2.0] — 2026-02-20 _(Merge con remote + correcciones)_
+
+#### Integrado del remote
+- Nuevos tests: `test_api_v2.py`, `test_cfdi_core.py`, `test_cfdi_routes.py`, `test_cfdi_setup.py`.
+- Nuevos tests de integración CSF: `test_csf_integration.py`, `test_csf_profile_integration.py`, `test_csf_validator.py`.
+- Scripts de arranque: `start.py` (orquestador), `start_server.py` (uvicorn), `test_server.py`.
+- `backend/core/all_models.py` — modelos extendidos para CFDI/CSF.
+
+#### Corregido
+- `start.py` y `start_server.py` actualizados a `backend.api.main` (antes apuntaban a `backend.app.main`).
+- Entry points en AGENTS.md actualizados: `start.py` / `start_server.py` reemplazan a `main.py` / `web_app.py`.
 
 ### [1.1.0] — 2026-02-20 _(Reestructuración)_
 
@@ -293,6 +324,20 @@ Los tests se ejecutan automáticamente en GitHub Actions (`.github/workflows/ci.
 - Actualizado `docker-compose.yml` con `uvicorn` y `env_file`.
 - Creado `.env.example`.
 - Consolidados todos los `.md` en este archivo.
+### Sesión 3 — Merge con remote + commit/push (2026-02-20)
+
+**Situación encontrada:**
+El remote (`origin/main`) tenía 14 commits nuevos con features de CFDI/CSF, nuevos tests y scripts de arranque (`start.py`, `start_server.py`). Conflictos en `AGENTS.md`, `.gitignore`, `config.py`, `tasks.py`. El remote había eliminado `main.py` y `web_app.py` (reemplazados por `start*.py`).
+
+**Resolución de conflictos:**
+- Tomada versión local para: `AGENTS.md`, `.gitignore`, `config.py`, `tasks.py` (contienen la reestructuración).
+- Eliminados `main.py` y `web_app.py` (el remote los removió, se adopta su convención de `start*.py`).
+- Integrados sin conflicto: nuevos tests CFDI/CSF, `start.py`, `start_server.py`, `all_models.py`.
+- Corregidas referencias a `backend.app.main` → `backend.api.main` en `start.py` y `start_server.py`.
+
+**Commits creados:**
+1. `refactor: reestructuracion con buenas practicas` — 33 archivos, 863 inserciones, 1223 eliminaciones.
+2. `merge: integrar cambios remotos conservando reestructuracion local` — merge commit.
 
 ---
 

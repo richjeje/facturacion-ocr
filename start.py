@@ -23,7 +23,7 @@ class ProcessManager:
         print("Iniciando backend FastAPI...")
         backend_cmd = [
             sys.executable, "-m", "uvicorn", 
-            "backend.app.main:app", 
+            "backend.api.main:app", 
             "--host", "0.0.0.0", 
             "--port", "8000", 
             "--reload"
@@ -46,7 +46,7 @@ class ProcessManager:
         """Iniciar el servidor frontend"""
         print("Iniciando servidor frontend...")
         frontend_cmd = [
-            sys.executable, "backend/app/main.py"
+            sys.executable, "start_server.py"
         ]
         
         frontend_process = subprocess.Popen(
@@ -100,8 +100,8 @@ def main():
     
     try:
         # Verificar que estamos en el directorio correcto
-        if not (ROOT_DIR / "backend" / "app" / "main.py").exists():
-            print("Error: No se encuentra el archivo backend/app/main.py")
+        if not (ROOT_DIR / "backend" / "api" / "main.py").exists():
+            print("Error: No se encuentra el archivo backend/api/main.py")
             print("Ejecuta este script desde el directorio raíz del proyecto")
             sys.exit(1)
         
