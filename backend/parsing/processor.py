@@ -2,7 +2,7 @@ import re
 import logging
 from typing import Optional, Dict, Any
 from fuzzywuzzy import fuzz
-from backend.core.config import (
+from core.config import (
     EMPRESAS_CONOCIDAS,
     obtener_empresas_por_clasificacion,
     REGEX_FECHAS,
@@ -13,7 +13,7 @@ from backend.core.config import (
     REGEX_SUBTOTALS,
     REGEX_TOTALS,
 )
-from backend.core.utils import (
+from core.utils import (
     clean_date,
     clean_amount,
     convertir_fecha_texto,

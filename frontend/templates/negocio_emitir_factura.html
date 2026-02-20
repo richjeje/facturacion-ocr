@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Emitir Factura - Negocio{% endblock %}
+{% block content %}
+<div class="container" style="padding:2rem; max-width:1100px;">
+  <h2>Emitir Factura</h2>
+  <p class="text-muted" style="margin-bottom:1rem;">Complete los datos para emitir la factura y registre la constancia de situación fiscal del cliente.</p>
+
+  <form id="emitir-factura-form" class="card p-4" style="display:flex; flex-direction:column; gap:12px;">
+    <div style="display:flex; flex-wrap:wrap; gap:12px;">
+      <div style="flex:1 1 320px; min-width:260px;">
+        <label>Cliente</label>
+        <select id="cliente-select" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"></select>
+      </div>
+      <div style="flex:1 1 260px; min-width:260px;">
+        <label>RFC</label>
+        <input type="text" id="cliente-rfc" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);" />
+      </div>
+      <div style="flex:1 1 320px; min-width:260px;">
+        <label>Nombre / Razón Social</label>
+        <input type="text" id="cliente-nombre" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);" />
+      </div>
+    </div>
+
+    <div id="cliente-domicilio" class="card" style="padding:12px; display:block;">
+      <h4 style="margin:0 0 6px 0;">Domicilio</h4>
+      <input type="text" id="domicilio" placeholder="Calle, Colonia, No. Ext, No. Int" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
+      <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+        <input type="text" id="estado" placeholder="Estado" required style="flex:1 1 180px; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
+        <input type="text" id="municipio" placeholder="Municipio" required style="flex:1 1 180px; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
+        <input type="text" id="postal" placeholder="Código Postal" required style="flex:1 1 180px; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+        <input type="text" id="regimen" placeholder="Régimen Fiscal" required style="flex:1 1 260px; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
+        <input type="text" id="uso_cfdi" placeholder="Uso CFDI" required style="flex:1 1 180px; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <div style="flex:1 1 260px; min-width:260px;">
+        <label>Teléfono</label>
+        <input type="text" id="telefono" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
+      </div>
+      <div style="flex:1 1 260px; min-width:260px;">
+        <label>Email</label>
+        <input type="email" id="email" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+      <div style="flex:1 1 260px; min-width:260px;">
+        <label>Concepto</label>
+        <input type="text" id="concepto" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
+      </div>
+      <div style="flex:0 0 180px; min-width:180px;">
+        <label>Total</label>
+        <input type="number" id="total" step="0.01" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
+      </div>
+    </div>
+
+    <div class="drop-zone" id="pdf-upload-zone" style="margin-top:8px; padding:14px; text-align:center; border:1px dashed rgba(0,0,0,.2); border-radius:8px; cursor:pointer; background:linear-gradient(135deg, rgba(56,189,248,.15), rgba(56,189,248,.05));" onclick="document.getElementById('pdf-input').click();">
+      <i class="fas fa-paperclip"></i> Adjuntar PDF (Constancia de Situación Fiscal)
+      <input type="file" id="pdf-input" accept="application/pdf" style="display:none;" />
+      <div id="pdf-selected" style="font-size:12px; color:#333; margin-top:6px;"></div>
+    </div>
+    <button type="submit" class="btn btn-primary w-auto" style="margin-top:8px;">Emitir</button>
+  </form>
+
+  <div id="emitir-factura-result" class="mt-3"></div>
+</div>
+{% endblock %}

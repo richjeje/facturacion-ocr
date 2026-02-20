@@ -1,0 +1,32 @@
+# samples/csf/sample_persona_fisica.pdf
+# Este es un placeholder para muestra de CSF
+# En producción, este sería un PDF real con la estructura de una Constancia de Situación Fiscal
+
+# Contenido esperado del PDF:
+"""
+CONSTANCIA DE SITUACIÓN FISCAL
+
+RFC: GODE561231GR5
+CURP: GODE561231HDFRRN09
+
+Nombre: JUAN GÓMEZ DÍAZ
+
+Domicilio Fiscal:
+Calle: AVENIDA JUÁREZ
+Número Exterior: 123
+Colonia: CENTRO
+Municipio: CUAUHTÉMOC
+Estado: CIUDAD DE MÉXICO
+Código Postal: 06000
+
+Régimen Fiscal: 612 - Personas Físicas con Actividades Empresariales y Profesionales
+
+Fecha de Inicio de Operaciones: 01/01/2020
+
+Lugar y Fecha de Emisión: CIUDAD DE MÉXICO, 28/01/2026
+
+Cédula de Identificación Fiscal (CIF):
+Código QR: ?re=GODE561231GR5&tp=CSF&fc=20260128&id=ABC1234567890123456789012
+RFC: GODE561231GR5
+Nombre: JUAN GÓMEZ DÍAZ
+"""

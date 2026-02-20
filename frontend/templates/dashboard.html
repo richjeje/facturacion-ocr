@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Facturacion OCR{% endblock %}
+
+{% block content %}
+
+  <div class="header-center" aria-label="Navegación principal" style="gap:1rem;">
+    <nav class="nav-block" aria-label="Negocio" style="display:flex;gap:.75rem;align-items:center;">
+      <a href="/negocio/emitir-factura" class="nav-link">Emitir Factura</a>
+      <a href="/negocio/facturar-gastos" class="nav-link">Facturar Gastos</a>
+      <a href="/negocio/mis-facturas" class="nav-link">Mis Facturas</a>
+      <a href="/negocio/mis-clientes" class="nav-link">Mis Clientes</a>
+    </nav>
+    <!-- Removed: Clientes section until further notice -->
+  </div>
+  <div class="header-right">
+    <button aria-label="Notificaciones" id="notif-btn" class="icon-btn" style="background:transparent;border:none;cursor:pointer;position:relative;">
+      <i class="fas fa-bell"></i>
+      <span id="notif-count" class="badge" style="display:none; position:absolute; top:-6px; right:-6px; background:red; color:white; border-radius:999px; padding:2px 6px; font-size:10px;">0</span>
+    </button>
+    <a href="/configuracion/perfil" aria-label="Perfil" class="avatar-link" style="display:inline-flex; align-items:center; text-decoration:none; color:inherit;">
+      {% if user.profile_photo %}
+      <img src="{{ user.profile_photo }}" class="avatar" alt="Perfil" style="width:28px;height:28px;border-radius:50%;border:1px solid #999;">
+      {% else %}
+      <span class="avatar" style="width:28px;height:28px;border-radius:50%; background:#999; display:inline-flex; align-items:center; justify-content:center; color:white; font-weight:bold;">U</span>
+      {% endif %}
+    </a>
+    <a href="/logout" aria-label="Logout" class="icon-btn" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:6px;"><i class="fas fa-sign-out-alt"></i></a>
+  </div>
+  <!-- Mobile menu button (visible on small screens) -->
+  <button id="mobile-menu-btn" aria-label="Menu" class="mobile-only" style="display:none; border:none; background:transparent; font-size:1.25rem; margin-right: .5rem; cursor:pointer;"><i class="fas fa-bars"></i></button>
+  <div id="mobile-menu" class="mobile-drawer" style="display:none; position: fixed; top: 64px; left: 0; width: 260px; height: calc(100vh - 64px); background:#fff; border-right: 1px solid var(--border-dim); z-index: 9999; overflow:auto; transform: translateX(-110%); transition: transform 0.25s ease;"></div>
+</div>
+
+<div class="main-content" aria-label="Contenido principal"></div>
+
+<script>
+    function switchPage(pageId) {
+        document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+        const targetPage = document.getElementById('page-' + pageId);
+        if (targetPage) targetPage.classList.add('active');
+        
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        // Find the nav item that corresponds to the pageId
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(`'${pageId}'`)) {
+                item.classList.add('active');
+            }
+        });
+        
+        if (pageId === 'history') loadHistory();
+        if (pageId === 'issued') loadIssued();
+        if (pageId === 'clients') loadClients();
+    }
+
+    // Photo Upload Logic
+    document.getElementById('photo-upload').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await fetch('/api/profile/photo', {
+                method: 'POST',
+                body: formData,
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                const imgProf = document.getElementById('profile-preview');
+                const imgSide = document.getElementById('side-profile-photo');
+                const placeholderProf = document.getElementById('profile-preview-placeholder');
+                const placeholderSide = document.getElementById('side-profile-photo-placeholder');
+                
+                if (imgProf) { imgProf.src = data.url; imgProf.style.display = 'block'; }
+                if (imgSide) { imgSide.src = data.url; imgSide.style.display = 'block'; }
+                if (placeholderProf) placeholderProf.style.display = 'none';
+                if (placeholderSide) placeholderSide.style.display = 'none';
+                
+                alert('Foto actualizada');
+            }
+        } catch (e) {
+            alert('Error al subir foto');
+        }
+    });
+
+    async function loadIssued() {
+        const container = document.getElementById('issued-list');
+        container.innerHTML = '<p class="text-muted text-center p-4">Cargando...</p>';
+        try {
+            const res = await fetch('/api/issued', {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+            });
+            const json = await res.json();
+            if (json.data && json.data.length > 0) {
+                // Render issued list
+            } else {
+                container.innerHTML = '<p class="text-muted text-center p-4">No has emitido facturas aún.</p>';
+            }
+        } catch (e) {
+            container.innerHTML = '<p class="text-danger text-center p-4">Error al cargar.</p>';
+        }
+    }
+
+    document.getElementById('invoice-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const concept = document.getElementById('inv-concept').value;
+        const total = document.getElementById('inv-total').value;
+        
+        try {
+            const res = await fetch(`/api/invoicing?concept=${encodeURIComponent(concept)}&total=${total}`, {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+            });
+            const data = await res.json();
+            alert(data.message);
+            if (res.ok) switchPage('issued');
+        } catch (e) {
+            alert('Error al emitir factura');
+        }
+    });
+
+    document.getElementById('profile-update-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const params = new URLSearchParams({
+            business_name: document.getElementById('prof-name').value,
+            owner_name: document.getElementById('prof-name').value, // Simplified
+            rfc: document.getElementById('prof-rfc').value,
+            phone: document.getElementById('prof-phone').value,
+            email: document.getElementById('prof-email').value,
+            address: '', // Placeholder
+            postal_code: ''
+        });
+
+        try {
+            const res = await fetch('/api/business/profile?' + params.toString(), {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+            });
+            if (res.ok) alert('Perfil actualizado');
+        } catch (e) {
+            alert('Error al actualizar');
+        }
+    });
+
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const processBtn = document.getElementById('process-btn');
+    let selectedFile = null;
+
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        handleFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+    function handleFile(file) {
+        if (!file) return;
+        selectedFile = file;
+        document.getElementById('filename').textContent = file.name;
+        document.getElementById('file-preview').style.display = 'block';
+    }
+
+    processBtn.addEventListener('click', async () => {
+        if (!selectedFile) return;
+        processBtn.disabled = true;
+        processBtn.textContent = 'Procesando...';
+        
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+        
+        try {
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                document.getElementById('process-result').innerHTML = `
+                    <div class="card mt-2 border-primary">
+                        <h4 class="text-success">¡Enviado!</h4>
+                        <p>Tarea ID: ${data.task_id}</p>
+                        <small class="text-muted">El resultado aparecerá en el historial en unos momentos.</small>
+                    </div>
+                `;
+            } else {
+                alert('Error: ' + data.detail);
+            }
+        } catch (e) {
+            alert('Error al procesar');
+        } finally {
+            processBtn.disabled = false;
+            processBtn.textContent = 'Procesar Ahora';
+        }
+    });
+
+    async function loadHistory() {
+        const container = document.getElementById('history-list');
+        container.innerHTML = '<p class="text-muted">Cargando historial...</p>';
+        try {
+            const res = await fetch('/api/results', { 
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') } 
+            });
+            const json = await res.json();
+            if (json.data && json.data.length > 0) {
+                container.innerHTML = json.data.map(i => `
+                    <div class="card flex justify-between items-center p-3">
+                        <div>
+                            <strong>${i.proveedor || 'Sin Proveedor'}</strong><br>
+                            <small class="text-muted">${i.fecha || 'Sin Fecha'} - Folio: ${i.folio || 'N/A'}</small>
+                        </div>
+                        <div style="font-size: 1.1rem; font-weight: bold;">$${i.total || '0.00'}</div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p class="text-muted">No hay facturas procesadas.</p>';
+            }
+        } catch (e) {
+            container.innerHTML = '<p class="text-danger">Error al cargar historial.</p>';
+        }
+    }
+
+    async function loadClients() {
+        // Placeholder for now
+        document.getElementById('clients-list').innerHTML = '<div class="card"><p class="text-muted">Módulo de clientes en desarrollo.</p></div>';
+    }
+
+    async function logout() {
+        try {
+            await fetch('/logout', { method: 'POST' });
+        } catch (e) {}
+        localStorage.removeItem('token');
+        window.location.href = '/';
+    }
+</script>
+</div>
+{% endblock %}
