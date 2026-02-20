@@ -1,4 +1,0 @@
-- [x] Actualizar la verificación de contexto de códigos postales en main.py para incluir "código postal" con acento
-- [x] Probar el cambio ejecutando el script en algunas imágenes (skipped)
-- [x] Verificar que los folios no sean códigos postales en la salida (skipped)
-- [x] Agregar función para elegir cuántos PDFs procesar (ej. primeros 30 o 2)

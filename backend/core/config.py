@@ -1,44 +1,48 @@
+"""Configuración centralizada del sistema de facturación OCR.
+
+Carga valores desde variables de entorno y archivos JSON externos,
+con fallbacks a valores por defecto.
+"""
+
+from __future__ import annotations
+
 import json
-import os
 import logging
+import os
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-
-# --- Cargar configuración ---
-def load_config():
-    """Carga configuraciones desde JSON con fallbacks a valores por defecto.
-
-    Returns:
-        dict: Diccionario con configuraciones cargadas.
-    """
-    config_data = {}
-    try:
-        with open("companies.json", "r", encoding="utf-8") as f:
-            config_data.update(json.load(f))
-    except FileNotFoundError:
-        print("companies.json no encontrado, usando fallbacks")
-
-    try:
-        with open('companies.json', 'r', encoding='utf-8') as f:
-            config_data.update(json.load(f))
-    except FileNotFoundError:
-        logger.warning("companies.json no encontrado, usando fallbacks")
-
-    try:
-        with open('patterns.json', 'r', encoding='utf-8') as f:
-            config_data.update(json.load(f))
-    except FileNotFoundError:
-        logger.warning("patterns.json no encontrado, usando fallbacks")
-
-    return config_data
+# ---------------------------------------------------------------------------
+# Rutas base
+# ---------------------------------------------------------------------------
+# Directorio raíz del repositorio (dos niveles arriba de este archivo)
+_ROOT_DIR = Path(__file__).resolve().parents[2]
+_DATA_DIR = _ROOT_DIR / "data"
 
 
-_config = load_config()
+def _load_json(filename: str) -> dict:
+    """Carga un archivo JSON desde ``data/``, con fallback silencioso."""
+    path = _DATA_DIR / filename
+    if path.exists():
+        try:
+            with path.open("r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as exc:
+            logger.warning("No se pudo leer %s: %s", path, exc)
+    else:
+        logger.warning("%s no encontrado, usando fallbacks.", path)
+    return {}
 
-# --- Configuración de empresas ---
-EMPRESAS_CONOCIDAS = _config.get(
+
+_companies_data = _load_json("companies.json")
+_patterns_data = _load_json("patterns.json")
+
+# ---------------------------------------------------------------------------
+# Configuración de empresas
+# ---------------------------------------------------------------------------
+EMPRESAS_CONOCIDAS: list[str] = _companies_data.get(
     "empresas_conocidas",
     [
         "UNIDAD DE GASOLINERAS",
@@ -109,7 +113,7 @@ EMPRESAS_CONOCIDAS = _config.get(
     ],
 )
 
-CLASIFICACIONES_EMPRESAS = _config.get(
+CLASIFICACIONES_EMPRESAS: dict[str, list[str]] = _companies_data.get(
     "clasificaciones_empresas",
     {
         "ferreteria": [
@@ -189,8 +193,10 @@ CLASIFICACIONES_EMPRESAS = _config.get(
     },
 )
 
-# --- Configuración de fechas ---
-MESES_MAP = _config.get(
+# ---------------------------------------------------------------------------
+# Configuración de fechas
+# ---------------------------------------------------------------------------
+MESES_MAP: dict[str, str] = _patterns_data.get(
     "meses_map",
     {
         "ene": "01",
@@ -209,23 +215,26 @@ MESES_MAP = _config.get(
     },
 )
 
-REGEX_FECHAS = _config.get(
+REGEX_FECHAS: list[str] = _patterns_data.get(
     "regex_fechas",
     [
         r"\d{1,2}/\d{1,2}/\d{4}",
         r"\d{1,2}-\d{1,2}-\d{4}",
         r"\d{4}-\d{1,2}-\d{1,2}",
-        r"\d{1,2}/\d{1,2}/\d{2}",  # Short year
-        r"(\d{1,2})\s+de\s+([a-z]+)\s+de\s+(\d{4})",  # e.g., 15 de agosto de 2024
+        r"\d{1,2}/\d{1,2}/\d{2}",
+        r"(\d{1,2})\s+de\s+([a-z]+)\s+de\s+(\d{4})",
     ],
 )
-REGEX_FECHA_TEXTO = _config.get(
+
+REGEX_FECHA_TEXTO: str = _patterns_data.get(
     "regex_fecha_texto",
     r"(\d{1,2})/([a-z0-9]{3})\.?/(\d{4})(?:\s+\d{1,2}:\d{2}:\d{2})?",
 )
 
-# --- Configuración de folios ---
-FOLIO_PATTERNS = _config.get(
+# ---------------------------------------------------------------------------
+# Configuración de folios
+# ---------------------------------------------------------------------------
+FOLIO_PATTERNS: dict[str, str] = _patterns_data.get(
     "folio_patterns",
     {
         "WIZARD ZONE MEXICO": r"F(\d{4})",
@@ -237,7 +246,7 @@ FOLIO_PATTERNS = _config.get(
     },
 )
 
-FOLIO_PATTERNS_GENERAL = _config.get(
+FOLIO_PATTERNS_GENERAL: list[str] = _patterns_data.get(
     "folio_patterns_general",
     [
         r"Folio:\s*([0-9]+)",
@@ -245,13 +254,15 @@ FOLIO_PATTERNS_GENERAL = _config.get(
         r"No\.?\s*Folio[^f]*([0-9]+)",
         r"Número\s*de\s*Folio[^f]*([0-9]+)",
         r"Num\.?\s*Folio[^f]*([0-9]+)",
-        r"Folio\s+Fiscal[^f]*([0-9]+)",  # Sometimes "Folio Fiscal"
-        r"(\d{5,10})",  # General 5-10 digit numbers, but filter carefully
+        r"Folio\s+Fiscal[^f]*([0-9]+)",
+        r"(\d{5,10})",
     ],
 )
 
-# --- Configuración de FIX ---
-FIX_ADDRESSES = _config.get(
+# ---------------------------------------------------------------------------
+# Configuración de FIX
+# ---------------------------------------------------------------------------
+FIX_ADDRESSES: list[str] = _patterns_data.get(
     "fix_addresses",
     [
         "BLVD. ZACATECAS 204 ,EL PLATEADO 20137, AGUASCALIENTES AGUASCALIENTES, MEXICO",
@@ -260,8 +271,10 @@ FIX_ADDRESSES = _config.get(
     ],
 )
 
-# --- Regex adicionales ---
-REGEX_SUBTOTALS = _config.get(
+# ---------------------------------------------------------------------------
+# Regex de montos
+# ---------------------------------------------------------------------------
+REGEX_SUBTOTALS: list[str] = _patterns_data.get(
     "regex_subtotals",
     [
         r"sub\s*total[^\d]*\$?(\d+(?:[,.]\d+)*)",
@@ -272,7 +285,7 @@ REGEX_SUBTOTALS = _config.get(
     ],
 )
 
-REGEX_TOTALS = _config.get(
+REGEX_TOTALS: list[str] = _patterns_data.get(
     "regex_totals",
     [
         r"total[^\d]*\$?\s*(\d+(?:[,.]\d+)*)",
@@ -283,67 +296,46 @@ REGEX_TOTALS = _config.get(
         r"total\s+final[^\d]*\$?\s*(\d+(?:[,.]\d+)*)",
     ],
 )
-REGEX_FECHA_TEXTO = r"(\d{1,2})/([a-z0-9]{3})\.?/(\d{4})(?:\s+\d{1,2}:\d{2}:\d{2})?"
-
-# --- Configuración de folios ---
-FOLIO_PATTERNS = {
-    "WIZARD ZONE MEXICO": r"F(\d{4})",
-    "PLOMERIA SELECTA": r"(\d{6}-[A-Z])",
-    "OPERADORA OMX": r"OPERADORA OMX\s*([0-9]+)",
-    "ROBERTO BRAVO GUTIERREZ": r"ROBERTO BRAVO GUTIERREZ\s*([0-9]+)",
-    "HOME DEPOT MEXICO": r"HOME DEPOT MEXICO\s*([0-9]+)",
-    "COMERCIAL ELECTRICA": r"([A-Z]{2}\d{8})",
-}
-
-FOLIO_PATTERNS_GENERAL = [
-    r"Folio:\s*([0-9]+)",
-    r"Folio[^f]*([0-9]+)",
-    r"No\.?\s*Folio[^f]*([0-9]+)",
-    r"Número\s*de\s*Folio[^f]*([0-9]+)",
-    r"Num\.?\s*Folio[^f]*([0-9]+)",
-    r"Folio\s+Fiscal[^f]*([0-9]+)",
-    r"(\d{5,10})",  # General 5-10 digit numbers, but filter carefully
-]
-
-# --- Configuración de FIX ---
-FIX_ADDRESSES = [
-    "BLVD. ZACATECAS 204 ,EL PLATEADO 20137, AGUASCALIENTES AGUASCALIENTES, MEXICO",
-    "AVENIDA SIGLO XXI 5021, OJOCALIENTE 20196 AGUASCALIENTES AGUASCALIENTES, MEXICO",
-    "AVENIDA JOSE MARIA CHAVEZ 710.CP 20270, AGUASCALIENTES MEXICO, MEXICO AGUASCALIENTES",
-]
 
 
-# --- Funciones de configuración ---
-def obtener_empresas_por_clasificacion():
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+def obtener_empresas_por_clasificacion() -> dict[str, list[str]]:
+    """Devuelve el mapa de clasificaciones → empresas."""
     return CLASIFICACIONES_EMPRESAS
 
 
-def setup_logging():
-    """Configura logging centralizado con archivo rotativo y console.
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+def setup_logging() -> logging.Logger:
+    """Configura logging centralizado con archivo rotativo y consola.
+
+    Idempotente: si el root logger ya tiene handlers no los duplica.
 
     Returns:
-        Logger: Instancia del logger configurado.
+        Logger: Logger raíz configurado.
     """
-    logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    root = logging.getLogger()
+    if root.handlers:
+        return root
 
-    # Formato
+    root.setLevel(logging.INFO)
     formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
-    # Handler para archivo con rotación
-    log_dir = "logs"
-    os.makedirs(log_dir, exist_ok=True)
+    log_dir = _ROOT_DIR / "logs"
+    log_dir.mkdir(exist_ok=True)
     file_handler = RotatingFileHandler(
-        os.path.join(log_dir, "processing.log"), maxBytes=5 * 1024 * 1024, backupCount=5
+        log_dir / "processing.log", maxBytes=5 * 1024 * 1024, backupCount=5
     )
     file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
+    root.addHandler(file_handler)
 
-    # Handler para console
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
-    logger.addHandler(console_handler)
+    root.addHandler(console_handler)
 
-    return logger
+    return root

@@ -1,5 +1,10 @@
-"""Backend package for Facturacion OCR.
+"""Backend package for Facturación OCR.
 
-This package contains the application (FastAPI), CLI batch processor,
-Celery worker tasks, and OCR/parsing logic.
+Sub-paquetes:
+- ``api``     — Aplicación FastAPI (web/REST).
+- ``cli``     — Procesador CLI por lotes.
+- ``core``    — Configuración, modelos, base de datos y utilidades.
+- ``ocr``     — Extracción de texto (OCR + pdfplumber).
+- ``parsing`` — Parseo y validación de facturas.
+- ``worker``  — Tareas asíncronas con Celery.
 """

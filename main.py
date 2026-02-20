@@ -1,12 +1,10 @@
-"""Backward-compatible entrypoint.
+"""Entry point de compatibilidad — CLI batch processor.
 
-The CLI batch processor lives in `backend/cli/main.py`.
+Uso:
+    python main.py
 """
 
-from backend.cli.main import *  # noqa: F403
-
+from backend.cli.main import main  # noqa: F401
 
 if __name__ == "__main__":
-    from backend.cli.main import main as _main
-
-    _main()
+    main()

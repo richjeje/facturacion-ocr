@@ -1,149 +1,299 @@
-# AGENTS.md - Registro de Trabajo del Asistente
+# AGENTS.md — Facturación OCR
 
-Este archivo documenta el trabajo realizado por el asistente de IA en la refactorización y mejora del proyecto **Facturacion OCR**.
+Documento central del proyecto. Combina guía de uso, arquitectura, historial de cambios y notas del asistente de IA.
 
-## Sesión Inicial: Análisis y Planificación
+---
 
-### Problemas Identificados
+## Índice
+
+1. [¿Qué es este proyecto?](#qué-es-este-proyecto)
+2. [Instalación](#instalación)
+3. [Uso](#uso)
+4. [Estructura del proyecto](#estructura-del-proyecto)
+5. [Configuración](#configuración)
+6. [Despliegue](#despliegue)
+7. [Tests](#tests)
+8. [Changelog](#changelog)
+9. [Pendientes](#pendientes)
+10. [Registro del asistente IA](#registro-del-asistente-ia)
+
+---
+
+## ¿Qué es este proyecto?
+
+Sistema para automatizar la extracción de datos de facturas mexicanas en PDFs e imágenes usando OCR.
+Soporta dos modos de operación:
+
+- **CLI** (`python main.py`) — procesamiento por lotes desde la carpeta `imagenes/`, exporta a Excel y BD.
+- **Web / API** (`uvicorn backend.api.main:app`) — FastAPI con auth JWT, uploads drag-and-drop, dashboard con Plotly, WebSocket real-time y API REST para integraciones.
+
+---
+
+## Instalación
+
+```bash
+# 1. Clonar
+git clone <repo-url>
+cd facturacion-ocr
+
+# 2. Crear entorno virtual
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+# source .venv/bin/activate   # Linux/macOS
+
+# 3. Instalar dependencias
+pip install -r requirements.txt
+
+# 4. Configurar variables de entorno
+cp .env.example .env
+# Edita .env con tus valores (SECRET_KEY, DATABASE_URL, REDIS_URL)
+
+# 5. Instalar Tesseract OCR (solo para modo OCR imagen)
+# Windows: https://github.com/UB-Mannheim/tesseract/wiki
+# Asegúrate de que esté en PATH
+```
+
+---
+
+## Uso
+
+### CLI — Procesamiento en lote
+
+```bash
+# Coloca facturas en imagenes/ (PDF, JPG, PNG, DOCX, PPTX)
+python main.py
+# Ingresa cuántos archivos procesar (Enter = todos)
+# Resultado: output/facturas_procesadas.xlsx + base de datos
+```
+
+### Web / API
+
+```bash
+# Servidor web
+uvicorn backend.api.main:app --reload
+
+# Worker Celery (en otra terminal)
+celery -A backend.worker.tasks worker --loglevel=info
+```
+
+Endpoints disponibles:
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| `POST` | `/login` | Obtener token JWT |
+| `POST` | `/api/upload` | Subir factura (requiere API key) |
+| `GET` | `/api/status/{task_id}` | Estado de tarea |
+| `GET` | `/api/results` | Listar facturas procesadas |
+| `GET` | `/dashboard` | Dashboard con gráficos (JWT) |
+| `GET` | `/export/pdf` | Exportar reporte PDF (JWT) |
+| `WS` | `/ws` | Actualizaciones en tiempo real |
+
+---
+
+## Estructura del proyecto
+
+```
+facturacion-ocr/
+├── backend/
+│   ├── api/              # FastAPI — rutas, auth, dashboard, WebSocket
+│   │   └── main.py
+│   ├── cli/              # Procesador por lotes (entrada: imagenes/)
+│   │   └── main.py
+│   ├── core/             # Configuración, modelos, BD, utilidades
+│   │   ├── config.py     # Config central (env + data/*.json)
+│   │   ├── database.py   # SQLAlchemy engine + session
+│   │   ├── models.py     # ORM: User, APIKey, Invoice
+│   │   ├── persistence.py# save_to_database()
+│   │   └── utils.py      # Excepciones custom + helpers de texto
+│   ├── ocr/              # Extracción de texto
+│   │   └── extractor.py  # pdfplumber + EasyOCR + pytesseract
+│   ├── parsing/          # Parsing y validación de facturas
+│   │   └── processor.py  # process_invoice_text()
+│   └── worker/           # Celery
+│       ├── celeryconfig.py
+│       └── tasks.py
+├── data/                 # Configuración externa (companies.json, patterns.json)
+├── frontend/
+│   ├── templates/        # HTML servido por FastAPI
+│   └── static/           # CSS, JS, assets
+├── tests/                # Tests con pytest
+├── .env.example          # Variables de entorno documentadas
+├── docker-compose.yml    # Orquestación local (web + worker + db + redis)
+├── Dockerfile
+├── requirements.txt
+├── main.py               # Entry point CLI
+└── web_app.py            # Entry point Web (uvicorn)
+```
+
+---
+
+## Configuración
+
+### Variables de entorno (`.env`)
+
+| Variable | Requerida | Descripción |
+|----------|-----------|-------------|
+| `SECRET_KEY` | **Sí** | Clave para firmar JWT. Genera con `python -c "import secrets; print(secrets.token_hex(32))"` |
+| `DATABASE_URL` | No | `sqlite:///./facturacion_ocr.db` (default) o PostgreSQL |
+| `REDIS_URL` | No | `redis://localhost:6379/0` (default) |
+| `SENTRY_DSN` | No | DSN de Sentry para monitoreo de errores |
+
+### Empresas y patrones (`data/`)
+
+- **`data/companies.json`** — Lista de empresas conocidas y sus clasificaciones por categoría.
+- **`data/patterns.json`** — Regex de fechas, folios, subtotales y totales.
+
+Edita estos archivos para agregar/modificar proveedores sin tocar el código fuente.
+
+---
+
+## Despliegue
+
+### Local con Docker Compose
+
+```bash
+# Crea .env desde .env.example y ajusta
+cp .env.example .env
+
+docker-compose up --build
+# Accede en http://localhost:8000
+```
+
+### Producción: Vercel + Neon + Upstash Redis
+
+1. Configura Neon PostgreSQL (neon.tech) → obtén `DATABASE_URL`.
+2. Configura Upstash Redis → obtén `REDIS_URL`.
+3. En Vercel: conecta el repo, agrega env vars (`DATABASE_URL`, `SECRET_KEY`, `REDIS_URL`).
+4. Para Celery workers: usa Railway o similar con `celery -A backend.worker.tasks worker`.
+
+### VPS manual
+
+```bash
+bash deploy.sh
+```
+
+---
+
+## Tests
+
+```bash
+pytest tests/ -v
+
+# Con coverage
+pytest tests/ --cov=backend --cov-report=term-missing
+```
+
+Los tests se ejecutan automáticamente en GitHub Actions (`.github/workflows/ci.yml`) con PostgreSQL y Redis efímeros.
+
+---
+
+## Changelog
+
+### [1.1.0] — 2026-02-20 _(Reestructuración)_
+
+#### Cambiado
+- `backend/app/` renombrado a `backend/api/` (convención estándar).
+- `companies.json` y `patterns.json` movidos a `data/` (separación datos/código).
+- `backend/core/config.py` reescrito: sin duplicados, paths con `pathlib`, `setup_logging()` idempotente.
+- `backend/core/utils.py` limpiado: eliminado código muerto duplicado, `ordenar_facturas_por_fecha` no muta el DataFrame del caller.
+- `backend/api/main.py`: `SECRET_KEY` falla rápido si no está configurado, imports al tope del archivo.
+- `docker-compose.yml`: usa `uvicorn` correctamente, carga `.env`.
+
+#### Eliminado
+- Stubs/proxies redundantes en raíz: `extractor.py`, `processor.py`, `utils.py`, `config.py`, `celeryconfig.py`, `tasks.py`, `pdf_processor.py`, `check_excel.py`.
+- Scripts de debug temporales: `test_pdf.py`, `tests/temp_extract.py`, `tests/temp_extract_ocr.py`, `tests/debug_folio.py`.
+- `backend/ocr/pdf_processor.py` (versión monolítica obsoleta).
+
+#### Agregado
+- `.env.example` con documentación de todas las variables de entorno.
+- `.gitignore` actualizado: `temp_*`, `facturacion_ocr.db`.
+
+---
+
+### [1.0.0] — 2025-01-27
+
+#### Agregado
+- **Modularización completa**: código dividido en módulos (`config`, `utils`, `extractor`, `processor`).
+- **Interfaz Web**: FastAPI con autenticación JWT, uploads drag-and-drop, dashboard con Plotly.
+- **API REST**: endpoints `/api/upload`, `/api/results`, `/api/status` con API keys por cliente.
+- **OCR mejorado**: soporte EasyOCR, DOCX/PPTX, fallbacks y métricas.
+- **Colas asíncronas**: Celery + Redis (6 workers simultáneos, timeouts 10-15 min).
+- **Base de datos**: PostgreSQL con SQLAlchemy, índices en `fecha`, `proveedor`, `uploaded_at`.
+- **Tests y CI/CD**: pytest con coverage, GitHub Actions, linting (Black, Flake8, MyPy).
+- **Seguridad**: rate limiting (slowapi), sanitización de filenames, encriptación bcrypt.
+- **Monitoreo**: Sentry para errores, caching Redis (5 min TTL) en dashboard.
+- **Deploy**: Docker Compose, Vercel-ready, `deploy.sh` para VPS.
+
+#### Deuda técnica conocida
+- Entrenamiento OCR custom requiere dataset adicional.
+- Tests de integración requieren servicios externos (PostgreSQL, Redis); pasan en CI, pueden fallar en local sin deps.
+
+---
+
+## Pendientes
+
+- [ ] Migrar manejo de BD de `create_all` a Alembic (migraciones versionadas)
+- [ ] Agregar endpoint `POST /api/keys` para auto-provisionar API keys
+- [ ] Expandir tests de integración con mocks de Celery
+- [ ] Agregar entrenamiento OCR custom (requiere dataset de facturas mexicanas etiquetado)
+- [ ] WebSocket: enviar datos reales de progreso en lugar de mensaje genérico
+
+---
+
+## Registro del asistente IA
+
+### Sesión 1 — Análisis y planificación inicial
+
+**Problemas identificados originalmente:**
 - Código monolítico en `main.py` (477 líneas).
 - Sin manejo de errores ni logging.
 - Configuraciones hardcodeadas.
 - Sin tests.
 - Rendimiento limitado.
-- Falta de interfaz y APIs.
+- Sin interfaz ni APIs.
 
-### Plan de Mejoras (7 Pasos)
-1. **Modularizar Código**: Separar en módulos (config, utils, extractor, processor).
-2. **Agregar Manejo de Errores y Logging**: Excepciones custom, reintentos, logs estructurados.
-3. **Implementar Configuración Externa**: Archivos JSON para empresas/patrones.
-4. **Agregar Tests Unitarios e Integración**: pytest con mocks.
-5. **Optimizar Rendimiento**: Procesamiento paralelo, mejoras OCR.
-6. **Mejorar Documentación**: README, docstrings.
-7. **Escalabilidad y Seguridad**: BD PostgreSQL, validaciones, Docker.
+**Plan de 7 pasos ejecutado:**
+1. Modularizar código → separar en `config`, `utils`, `extractor`, `processor`.
+2. Agregar manejo de errores y logging → excepciones custom, reintentos, logs con rotación.
+3. Configuración externa → `companies.json`, `patterns.json`.
+4. Tests unitarios e integración → pytest con mocks.
+5. Rendimiento → procesamiento paralelo con `ThreadPoolExecutor`.
+6. Documentación → README, docstrings.
+7. Escalabilidad y seguridad → PostgreSQL, Docker, validaciones.
 
-## Implementación Ejecutada
+**Features adicionales implementadas:**
+- Interfaz Web con FastAPI y auth JWT.
+- API REST con API keys por cliente.
+- Soporte DOCX/PPTX en extractor.
+- Sistema de colas con Celery + Redis.
+- Dashboard con Plotly y WebSockets.
+- Rate limiting, sanitización, Sentry.
+- GitHub Actions CI/CD.
 
-### Paso 1: Modularización (Completado)
-- Creado `config.py`: Configs hardcodeadas movidas a dicts/JSON.
-- Creado `utils.py`: Funciones auxiliares (clean_date, etc.).
-- Creado `extractor.py`: Lógica de OCR y PDF.
-- Creado `processor.py`: Parsing de facturas.
-- Refactorizado `main.py`: Solo orquestación.
-- Fusionado `pdf_processor.py`.
+### Sesión 2 — Reestructuración con buenas prácticas (2026-02-20)
 
-### Paso 2: Manejo de Errores y Logging (Completado)
-- Agregado logging centralizado (`logging` con rotación).
-- Excepciones custom: `ExtractionError`, `ProcessingError`, `ValidationError`.
-- Reintentos en OCR (2 intentos con backoff).
-- Validaciones en processing.
-- Reemplazado `print()` con `logger` en todos los módulos.
+**Problemas identificados:**
+- 8 archivos proxy/stub en la raíz sin contenido real.
+- `backend/core/config.py` con variables definidas dos veces.
+- `backend/core/utils.py` con función `debe_omitir_factura` duplicada (código muerto).
+- `backend/ocr/pdf_processor.py` era la versión monolítica anterior, ya reemplazada.
+- `companies.json`/`patterns.json` en la raíz mezclados con código.
+- Scripts de debug sueltos en raíz y `tests/`.
+- `SECRET_KEY` con valor por defecto silencioso (riesgo de seguridad).
+- Imports inline dentro de funciones en `backend/app/main.py`.
+- `docker-compose.yml` con `SECRET_KEY` hardcodeado y sin `env_file`.
 
-### Paso 3: Configuración Externa (Completado)
-- Creado `companies.json`: Empresas y clasificaciones.
-- Creado `patterns.json`: Regex y mapas de fechas/folios.
-- Actualizado `config.py`: Carga desde JSON con fallbacks.
-
-### Paso 4: Tests Unitarios e Integración (Completado)
-- Creado `tests/` con `pytest`.
-- Tests unitarios: `test_extractor.py` (mocks OCR), `test_processor.py` (parsing), `test_integration.py` (end-to-end).
-- Archivo de muestra: `sample_invoice.txt`.
-
-### Paso 5: Optimización de Rendimiento (Completado)
-- Procesamiento paralelo: `ThreadPoolExecutor` (4-6 workers).
-- Mejora OCR: Redimensionamiento de imágenes grandes.
-- Migración a BD: PostgreSQL (SQLAlchemy) en lugar de SQLite.
-
-### Paso 6: Documentación (Completado)
-- Creado `README.md`: Instalación, uso, ejemplos, estructura.
-- Agregadas docstrings en funciones clave.
-
-### Paso 7: Escalabilidad y Seguridad (Completado)
-- BD PostgreSQL: Soporte para datasets grandes.
-- Validaciones: Límite 50MB archivos, tipos soportados.
-- Creado `Dockerfile`: Para despliegue containerizado.
-
-### Features Adicionales Implementadas
-
-#### Feature 1: Interfaz Web (Completada)
-- FastAPI con auth JWT.
-- UX avanzada: Drag-and-drop, previews, progreso real-time.
-- Hosting listo para Vercel/Koyeb.
-- BD Neon PostgreSQL integrada.
-
-#### Feature 2: API REST (Completada)
-- Endpoints `/api/upload`, `/api/results`, `/api/status`.
-- API keys para múltiples clientes.
-- Respuestas con metadata (cliente, timestamp).
-- Logging de llamadas en BD.
-
-#### Feature 3: Mejora OCR con Formatos Adicionales (Completada)
-- Soporte DOC/PPT (python-docx/pptx) en extractor.py.
-- EasyOCR local reemplazando pytesseract para mejor precisión.
-- Fallbacks implementados; métricas de logging agregadas.
-
-#### Feature 4: Sistema de Colas Asíncronas (Completada)
-- Celery + Redis implementado.
-- Persistencia en BD.
-- 6 workers simultáneos.
-- Timeouts 10-15 min.
-
-#### Feature 5: Dashboard de Reportes (Completada)
-- Plotly para gráficos de gastos y errores.
-- Filtros avanzados (fechas).
-- Export PDF con reportlab.
-- WebSockets para real-time updates.
-
-## Repositorio Creado
-- `git init` y commit inicial.
-- `.gitignore` para excluir venv, outputs, etc.
-- Archivos principales versionados.
-
-## Plan de Ajustes Finales para Pulido
-Post-implementación de features, se recomienda un plan de 4 semanas para pulir detalles:
-
-### Fase 1: Preparación y Herramientas (1 semana)
-- Instalar y configurar Black, Flake8, MyPy, pre-commit hooks.
-- Formatear código y detectar issues iniciales.
-
-### Fase 2: Pulido de Código y Seguridad (Completada - 1 semana)
-- Agregados type hints completos en funciones clave.
-- Reemplazados prints con logging estructurado.
-- Implementado rate limiting (slowapi), sanitización de filenames.
-
-### Fase 3: Optimizaciones de Rendimiento (Completada - 0.5 semanas)
-- Agregados índices en BD (fecha, proveedor, uploaded_at).
-- Implementado caching con Redis en dashboard (5 min TTL).
-- Optimizadas queries (límite 100 registros recientes).
-- Agregada tarea Celery para limpieza automática de archivos temp >24h.
-
-### Fase 4: Tests y CI/CD (Completada - 1 semana)
-- Expandidos tests de integración (pipelines completas).
-- Configurado GitHub Actions (.github/workflows/ci.yml) con PostgreSQL/Redis.
-- Agregado pytest-cov para coverage (target >80%).
-- Tests listos para CI (fallan local por deps, pasan en GH).
-
-### Fase 5: Documentación y Deploy (Completada - 0.5 semanas)
-- Actualizado README con sección de deploy (Vercel + Neon + Redis).
-- Creado CHANGELOG.md con features implementadas.
-- Scripts de deploy: docker-compose.yml (local), deploy.sh (prod).
-- Agregado monitoreo con Sentry.
-
-### Fase 6: Validación Final (Completada - 0.5 semanas)
-- Ejecutada full test suite (linting OK, tests preparados para CI).
-- Escaneo de seguridad con Bandit (sin vulnerabilidades críticas).
-- Tests de performance listos (simulación para 100 facturas).
-
-## Estado Final
-- Código modular, testeado, documentado.
-- Listo para deploy (Docker, Vercel).
-- Integrable con otros sistemas via API.
-
-## Notas del Asistente
-- Todas las implementaciones probadas con sintaxis/compilación.
-- Cambios no rompen funcionalidad existente.
-- Priorización por impacto: Web/API primero, luego mejoras internas.
+**Acciones tomadas:**
+- Eliminados todos los stubs/proxies de la raíz.
+- Renombrado `backend/app/` → `backend/api/`.
+- Creado `data/` y movidos los JSON de configuración.
+- Reescrito `config.py` con `pathlib`, sin duplicados.
+- Limpiado `utils.py`, corregida mutación de DataFrame.
+- Refactorizado `backend/api/main.py` con seguridad y estructura correcta.
+- Actualizado `docker-compose.yml` con `uvicorn` y `env_file`.
+- Creado `.env.example`.
+- Consolidados todos los `.md` en este archivo.
 
 ---
 
-**Actualizado:** 27 de Enero 2026
-**Asistente:** opencode
+_Última actualización: 2026-02-20_

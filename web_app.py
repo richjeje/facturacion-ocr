@@ -1,13 +1,14 @@
-"""Backward-compatible entrypoint.
+"""Entry point de compatibilidad — Servidor Web FastAPI.
 
-The FastAPI app lives in `backend/app/main.py`.
+Uso:
+    python web_app.py
+    # o directamente con uvicorn:
+    uvicorn backend.api.main:app --reload
 """
 
-from backend.app.main import *  # noqa: F403
-
+from backend.api.main import app  # noqa: F401
 
 if __name__ == "__main__":
-    from backend.app.main import app
     import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=8000)
