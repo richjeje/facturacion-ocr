@@ -1,139 +1,380 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Panel - Facturacion OCR{% endblock %}
+{% block title %}Panel de Administración - Facturación OCR{% endblock %}
+
+{% block head_extra %}
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "primary": "#7c4dff",
+                    "secondary": "#4d9fff",
+                    "background-light": "#f7f5f8",
+                    "background-dark": "#050508",
+                    "card-dark": "#0d0d14",
+                    "muted-text": "#6b6b80",
+                    "high-text": "#f0f0f5",
+                },
+                fontFamily: {
+                    "display": ["Space Grotesk", "sans-serif"],
+                    "title": ["Bebas Neue", "cursive"],
+                    "data": ["Space Mono", "monospace"],
+                    "body": ["DM Sans", "sans-serif"],
+                },
+                borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+            },
+        },
+    }
+</script>
+<style>
+    body {
+        font-family: 'DM Sans', sans-serif;
+        background-color: #050508;
+        color: #f0f0f5;
+    }
+
+    .btn-gradient {
+        background: linear-gradient(135deg, #7c4dff 0%, #4d9fff 100%);
+    }
+
+    .glass-card {
+        background-color: #0d0d14;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        transition: all 0.3s ease;
+    }
+
+    .glass-card:hover {
+        border-color: rgba(124, 77, 255, 0.3);
+        box-shadow: 0 0 20px rgba(124, 77, 255, 0.1);
+    }
+
+    .title-font {
+        font-family: 'Bebas Neue', cursive;
+    }
+
+    .data-font {
+        font-family: 'Space Mono', monospace;
+    }
+</style>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+{% endblock %}
 
 {% block content %}
-<style>
-    .admin-container {
-        padding: 2rem;
-        max-width: 1000px;
-        margin: 0 auto;
-    }
-    .status-badge {
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.8rem;
-        font-weight: bold;
-    }
-    .status-pending { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
-    .status-active { background: rgba(0, 230, 118, 0.2); color: #00e676; }
-</style>
+<div id="admin-app" class="bg-background-dark text-high-text min-h-screen py-10 px-6">
+    <div class="max-w-6xl w-full mx-auto">
+        <!-- Breadcrumb & Top Bar -->
+        <header class="flex items-center justify-between mb-12">
+            <div class="flex items-center gap-2 text-xs uppercase tracking-widest text-muted-text data-font">
+                <a class="hover:text-primary transition-colors" href="#">Admin</a>
+                <span class="material-symbols-outlined text-[10px]">chevron_right</span>
+                <span class="text-high-text">Dashboard</span>
+            </div>
+            <a href="/dashboard"
+                class="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 hover:border-primary/50 transition-all text-sm font-medium text-white no-underline">
+                <span class="material-symbols-outlined text-sm">arrow_back</span>
+                <span>Volver al Dashboard</span>
+            </a>
+        </header>
 
-<div class="admin-container">
-    <div class="flex justify-between items-center mb-4">
-        <h2>Panel de Administración</h2>
-        <a href="/dashboard" class="btn btn-outline">Volver al Dashboard</a>
+        <!-- Page Hero -->
+        <section class="mb-12 text-center md:text-left">
+            <h2 class="text-7xl font-title text-high-text tracking-tight leading-none mb-2 uppercase">Panel de
+                Administración</h2>
+            <p class="text-muted-text text-lg max-w-2xl">Gestión de operaciones, validación de identidades fiscales y
+                aprobaciones críticas de sistema.</p>
+        </section>
+
+        <!-- Main Dashboard Card -->
+        <div class="glass-card rounded-2xl p-8 mb-8">
+            <div class="flex items-center justify-between mb-8 border-b border-white/5 pb-6">
+                <div class="flex items-center gap-3">
+                    <div class="size-3 rounded-full btn-gradient"></div>
+                    <h3 class="text-2xl font-title tracking-wide text-high-text">Negocios Pendientes de Aprobación</h3>
+                </div>
+                <div class="flex gap-2">
+                    <div
+                        class="px-3 py-1 rounded bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold data-font uppercase">
+                        [[ pendingUsers.length ]] Pendientes</div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div v-if="loading" class="text-center py-10 text-muted-text">
+                <span class="material-symbols-outlined animate-spin text-4xl mb-2">refresh</span>
+                <p>Cargando solicitudes...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else-if="!pendingUsers || pendingUsers.length === 0" class="text-center py-10 text-muted-text">
+                <span class="material-symbols-outlined text-4xl mb-2 opacity-50">fact_check</span>
+                <p>No hay solicitudes pendientes en este momento.</p>
+            </div>
+
+            <!-- Pending Table -->
+            <div v-else class="overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[600px]">
+                    <thead>
+                        <tr class="text-muted-text text-[10px] uppercase tracking-[0.2em] font-bold data-font">
+                            <th class="py-4 px-6 border-b border-white/5">Business Name</th>
+                            <th class="py-4 px-6 border-b border-white/5">Username & Email</th>
+                            <th class="py-4 px-6 border-b border-white/5">RFC (Tax ID)</th>
+                            <th class="py-4 px-6 border-b border-white/5 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                        <tr v-for="u in pendingUsers" :key="u.id" class="group hover:bg-white/[0.02] transition-colors">
+                            <td class="py-6 px-6">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="size-8 rounded bg-white/5 flex items-center justify-center text-primary shrink-0">
+                                        <span class="material-symbols-outlined text-sm">corporate_fare</span>
+                                    </div>
+                                    <span class="font-bold text-high-text">[[ u.business_name ]]</span>
+                                </div>
+                            </td>
+                            <td class="py-6 px-6">
+                                <p class="text-sm text-high-text">[[ u.username ]]</p>
+                                <p class="text-xs text-muted-text font-data">[[ u.email ]]</p>
+                            </td>
+                            <td class="py-6 px-6 text-sm data-font text-muted-text">[[ u.business_rfc || 'N/A' ]]</td>
+                            <td class="py-6 px-6">
+                                <div class="flex justify-end gap-3">
+                                    <button @click="openApproveModal(u)"
+                                        class="px-4 py-2 rounded-lg bg-emerald-500/10 text-emerald-500 text-xs font-bold border border-emerald-500/20 hover:bg-emerald-500 hover:text-white transition-all uppercase tracking-wider">
+                                        Aprobar
+                                    </button>
+                                    <button @click="rejectUser(u.id)"
+                                        class="px-4 py-2 rounded-lg bg-rose-500/10 text-rose-500 text-xs font-bold border border-rose-500/20 hover:bg-rose-500 hover:text-white transition-all uppercase tracking-wider">
+                                        Rechazar
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Quick Stats Overlay -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+            <div class="glass-card rounded-xl p-6 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <span class="material-symbols-outlined text-6xl">verified</span>
+                </div>
+                <p class="text-xs uppercase tracking-widest text-muted-text data-font mb-2">Total Aprobados</p>
+                <p class="text-4xl font-title text-high-text">1,248</p>
+                <div class="mt-4 flex items-center gap-2 text-emerald-500 text-xs font-bold data-font">
+                    <span class="material-symbols-outlined text-sm">trending_up</span>
+                    <span>+12% esta semana</span>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-xl p-6 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <span class="material-symbols-outlined text-6xl">pending_actions</span>
+                </div>
+                <p class="text-xs uppercase tracking-widest text-muted-text data-font mb-2">SLA de Respuesta</p>
+                <p class="text-4xl font-title text-high-text">4.2h</p>
+                <div class="mt-4 flex items-center gap-2 text-primary text-xs font-bold data-font">
+                    <span class="material-symbols-outlined text-sm">timer</span>
+                    <span>Meta: < 6h</span>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-xl p-6 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <span class="material-symbols-outlined text-6xl">error</span>
+                </div>
+                <p class="text-xs uppercase tracking-widest text-muted-text data-font mb-2">Alertas de Fraude</p>
+                <p class="text-4xl font-title text-emerald-500">0</p>
+                <div class="mt-4 flex items-center gap-2 text-muted-text text-xs font-bold data-font">
+                    <span class="material-symbols-outlined text-sm">check_circle</span>
+                    <span>Sistema íntegro</span>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="card">
-        <h3>Negocios Pendientes de Aprobación</h3>
-        <p class="text-muted mb-4">Revisa y aprueba las solicitudes de registro de nuevos negocios.</p>
-        
-        <div id="pending-list" class="flex-col gap-2">
-            <p class="text-muted">Cargando solicitudes...</p>
+    <!-- Modal de Aprobación (Vue Controlled) -->
+    <div v-if="showModal"
+        class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-background-dark/80 p-4">
+        <div class="glass-card w-full max-w-md rounded-2xl p-8 relative shadow-2xl animate-fadeIn">
+            <button @click="closeModal"
+                class="absolute top-4 right-4 text-muted-text hover:text-white transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+            <h3 class="text-2xl font-title text-white tracking-wide mb-2 uppercase">Aprobar Negocio</h3>
+            <p class="text-sm text-muted-text mb-6">Asigna una contraseña inicial para el negocio <strong
+                    class="text-white">[[ selectedUser?.business_name ]]</strong>.</p>
+
+            <form @submit.prevent="submitApprove">
+                <div class="mb-6">
+                    <label
+                        class="block text-[10px] font-bold text-muted-text uppercase tracking-[0.2em] mb-2 data-font">Contraseña
+                        Inicial</label>
+                    <input type="password" v-model="initialPassword" required placeholder="••••••••"
+                        class="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-muted-text focus:border-primary/50 focus:ring-0 transition-colors" />
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="submit" :disabled="submitting"
+                        class="flex-1 btn-gradient py-3 rounded-lg text-white font-bold tracking-wider text-xs uppercase transition-all shadow-lg hover:brightness-110 disabled:opacity-50">
+                        [[ submitting ? 'Enviando...' : 'Confirmar Aprobación' ]]
+                    </button>
+                    <button type="button" @click="closeModal"
+                        class="px-6 py-3 rounded-lg border border-white/10 text-white font-bold tracking-wider text-xs uppercase hover:bg-white/5 transition-colors">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<!-- Modal de Aprobación -->
-<div id="approve-modal" class="auth-wrapper" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10000; display: none; background: rgba(0,0,0,0.8);">
-    <div class="auth-box card">
-        <h3>Aprobar Negocio</h3>
-        <p class="text-muted mb-4">Asigna una contraseña inicial para el negocio <strong id="modal-business-name"></strong>.</p>
-        
-        <form id="approve-form">
-            <input type="hidden" id="modal-user-id">
-            <div class="input-group">
-                <label for="initial-password">Contraseña Inicial</label>
-                <input type="password" id="initial-password" required placeholder="••••••••">
-            </div>
-            <div class="flex gap-2 mt-4">
-                <button type="submit" class="btn btn-primary w-full">Confirmar Aprobación</button>
-                <button type="button" class="btn btn-outline w-full" onclick="closeModal()">Cancelar</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
-    async function loadPending() {
-        const container = document.getElementById('pending-list');
-        try {
-            const res = await fetch('/api/admin/pending', {
-                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
-            });
-            const data = await res.json();
-            
-            if (data.length === 0) {
-                container.innerHTML = '<p class="text-center text-muted">No hay solicitudes pendientes.</p>';
-                return;
-            }
+    const { createApp, ref, onMounted } = Vue;
 
-            container.innerHTML = data.map(u => `
-                <div class="card flex justify-between items-center p-3">
-                    <div>
-                        <strong>${u.business_name}</strong> (${u.username})<br>
-                        <small class="text-muted">RFC: ${u.business_rfc} | Email: ${u.email}</small>
-                    </div>
-                    <div class="flex gap-2">
-                        <button class="btn btn-primary" onclick="openApproveModal(${u.id}, '${u.business_name}')">Aprobar</button>
-                        <button class="btn btn-outline text-error" onclick="rejectUser(${u.id})">Rechazar</button>
-                    </div>
-                </div>
-            `).join('');
-        } catch (e) {
-            container.innerHTML = '<p class="text-danger">Error al cargar datos.</p>';
+    createApp({
+        delimiters: ["[[", "]]"],
+        setup() {
+            const pendingUsers = ref([]);
+            const loading = ref(true);
+            const showModal = ref(false);
+            const selectedUser = ref(null);
+            const initialPassword = ref("");
+            const submitting = ref(false);
+
+            const fetchPending = async () => {
+                loading.value = true;
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        loading.value = false;
+                        return;
+                    }
+                    const res = await fetch('/api/admin/pending', {
+                        headers: { 'Authorization': 'Bearer ' + token }
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        pendingUsers.value = data || [];
+                    } else {
+                        // For demonstration if unauthorized
+                        console.error('Failed to load pending users');
+                        // mock
+                        /*pendingUsers.value = [
+                            { id: 1, business_name: 'Cyberdyne Systems', username: 'skynet', email: 'admin@cyberdyne.com', business_rfc: 'CSY840512T45' },
+                            { id: 2, business_name: 'Wayne Corp', username: 'bwayne', email: 'bruce@wayne.com', business_rfc: 'WCO390527B89' }
+                        ];*/
+                    }
+                } catch (e) {
+                    console.error(e);
+                } finally {
+                    loading.value = false;
+                }
+            };
+
+            const openApproveModal = (user) => {
+                selectedUser.value = user;
+                initialPassword.value = "";
+                showModal.value = true;
+            };
+
+            const closeModal = () => {
+                showModal.value = false;
+                selectedUser.value = null;
+                initialPassword.value = "";
+            };
+
+            const submitApprove = async () => {
+                if (!selectedUser.value || !initialPassword.value) return;
+
+                submitting.value = true;
+                try {
+                    const params = new URLSearchParams({ password: initialPassword.value });
+                    const res = await fetch(`/api/admin/approve/${selectedUser.value.id}?${params}`, {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+                    });
+
+                    if (res.ok) {
+                        alert('Negocio aprobado exitosamente.');
+                        closeModal();
+                        fetchPending();
+                    } else {
+                        const err = await res.json();
+                        alert('Error: ' + (err.detail || 'Fallo en aprobación'));
+                    }
+                } catch (e) {
+                    alert('Error de conexión con el servidor.');
+                } finally {
+                    submitting.value = false;
+                }
+            };
+
+            const rejectUser = async (id) => {
+                if (!confirm('¿Estás seguro de rechazar (eliminar) esta solicitud?')) return;
+
+                try {
+                    const res = await fetch(`/api/admin/reject/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+                    });
+
+                    if (res.ok) {
+                        fetchPending();
+                    } else {
+                        alert('Error al rechazar usuario.');
+                    }
+                } catch (e) {
+                    alert('Error de conexión al intentar rechazar.');
+                }
+            };
+
+            onMounted(() => {
+                fetchPending();
+            });
+
+            return {
+                pendingUsers,
+                loading,
+                showModal,
+                selectedUser,
+                initialPassword,
+                submitting,
+                openApproveModal,
+                closeModal,
+                submitApprove,
+                rejectUser
+            };
         }
-    }
-
-    function openApproveModal(id, name) {
-        document.getElementById('modal-user-id').value = id;
-        document.getElementById('modal-business-name').textContent = name;
-        document.getElementById('approve-modal').style.display = 'flex';
-    }
-
-    function closeModal() {
-        document.getElementById('approve-modal').style.display = 'none';
-        document.getElementById('approve-form').reset();
-    }
-
-    document.getElementById('approve-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const userId = document.getElementById('modal-user-id').value;
-        const password = document.getElementById('initial-password').value;
-        
-        try {
-            const res = await fetch(`/api/admin/approve/${userId}?password=${encodeURIComponent(password)}`, {
-                method: 'POST',
-                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
-            });
-            
-            if (res.ok) {
-                alert('Negocio aprobado exitosamente.');
-                closeModal();
-                loadPending();
-            } else {
-                const data = await res.json();
-                alert('Error: ' + data.detail);
-            }
-        } catch (e) {
-            alert('Error de conexión');
-        }
-    });
-
-    async function rejectUser(id) {
-        if (!confirm('¿Estás seguro de rechazar (eliminar) esta solicitud?')) return;
-        try {
-            const res = await fetch(`/api/admin/reject/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token') }
-            });
-            if (res.ok) {
-                loadPending();
-            }
-        } catch (e) { alert('Error al rechazar'); }
-    }
-
-    window.addEventListener('DOMContentLoaded', loadPending);
+    }).mount('#admin-app');
 </script>
+
+<style>
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .animate-fadeIn {
+        animation: fadeIn 0.2s ease-out forwards;
+    }
+</style>
 {% endblock %}

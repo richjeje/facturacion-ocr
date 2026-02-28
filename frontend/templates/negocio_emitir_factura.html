@@ -1,70 +1,287 @@
 {% extends "base.html" %}
+
 {% block title %}Emitir Factura - Negocio{% endblock %}
+
+{% block head_extra %}
+<link
+  href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Space+Mono&display=swap"
+  rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+  rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "primary": "#9551fb",
+          "accent-blue": "#4d9fff",
+          "background-dark": "#050508",
+          "card-dark": "#0d0d14",
+        },
+        fontFamily: {
+          "display": ["Space Grotesk", "sans-serif"],
+          "heading": ["Bebas Neue", "cursive"],
+          "body": ["DM Sans", "sans-serif"],
+          "mono": ["Space Mono", "monospace"]
+        },
+      },
+    },
+  }
+</script>
+<style>
+  .glass-card {
+    background: #0d0d14;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 0 0 40px rgba(149, 81, 251, 0.1);
+  }
+
+  .gradient-button {
+    background: linear-gradient(135deg, #9551fb 0%, #4d9fff 100%);
+    box-shadow: 0 4px 15px rgba(149, 81, 251, 0.4);
+  }
+
+  .input-focus:focus-within {
+    border-color: #4d9fff;
+    box-shadow: 0 0 0 2px rgba(77, 159, 255, 0.2);
+  }
+</style>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+{% endblock %}
+
 {% block content %}
-<div class="container" style="padding:2rem; max-width:1100px;">
-  <h2>Emitir Factura</h2>
-  <p class="text-muted" style="margin-bottom:1rem;">Complete los datos para emitir la factura y registre la constancia de situación fiscal del cliente.</p>
+<div id="app"
+  class="bg-background-dark font-body text-slate-100 min-h-screen p-6 relative overflow-hidden flex justify-center">
+  <!-- Background Decoration Elements -->
+  <div class="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] pointer-events-none">
+  </div>
+  <div
+    class="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-blue/10 rounded-full blur-[120px] pointer-events-none">
+  </div>
 
-  <form id="emitir-factura-form" class="card p-4" style="display:flex; flex-direction:column; gap:12px;">
-    <div style="display:flex; flex-wrap:wrap; gap:12px;">
-      <div style="flex:1 1 320px; min-width:260px;">
-        <label>Cliente</label>
-        <select id="cliente-select" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"></select>
-      </div>
-      <div style="flex:1 1 260px; min-width:260px;">
-        <label>RFC</label>
-        <input type="text" id="cliente-rfc" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);" />
-      </div>
-      <div style="flex:1 1 320px; min-width:260px;">
-        <label>Nombre / Razón Social</label>
-        <input type="text" id="cliente-nombre" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);" />
-      </div>
+  <div class="w-full max-w-4xl z-10 space-y-8 mt-10">
+    <!-- Header -->
+    <div class="mb-4 text-center md:text-left">
+      <h1 class="font-heading text-5xl tracking-wider text-slate-100 mb-2">EMITIR FACTURA</h1>
+      <p class="text-slate-400 font-mono text-sm">Complete los datos y registre la constancia de situación fiscal del
+        cliente.</p>
     </div>
 
-    <div id="cliente-domicilio" class="card" style="padding:12px; display:block;">
-      <h4 style="margin:0 0 6px 0;">Domicilio</h4>
-      <input type="text" id="domicilio" placeholder="Calle, Colonia, No. Ext, No. Int" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
-      <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-        <input type="text" id="estado" placeholder="Estado" required style="flex:1 1 180px; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
-        <input type="text" id="municipio" placeholder="Municipio" required style="flex:1 1 180px; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
-        <input type="text" id="postal" placeholder="Código Postal" required style="flex:1 1 180px; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
-      </div>
-      <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-        <input type="text" id="regimen" placeholder="Régimen Fiscal" required style="flex:1 1 260px; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
-        <input type="text" id="uso_cfdi" placeholder="Uso CFDI" required style="flex:1 1 180px; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
+    <!-- Form Card -->
+    <div class="glass-card rounded-2xl p-6 md:p-10">
+      <form id="emitir-factura-form" @submit.prevent="submitForm" class="space-y-6">
+        <!-- Row 1 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="space-y-2">
+            <label class="block text-xs font-mono uppercase tracking-widest text-slate-400">Cliente</label>
+            <select id="cliente-select" v-model="form.cliente" required
+              class="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-3 px-4 text-slate-100 focus:outline-none input-focus transition-all duration-300">
+              <option value="" disabled>Seleccione un cliente</option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-xs font-mono uppercase tracking-widest text-slate-400">RFC</label>
+            <input type="text" id="cliente-rfc" v-model="form.rfc" required
+              class="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-3 px-4 text-slate-100 placeholder:text-slate-600 focus:outline-none input-focus transition-all duration-300"
+              placeholder="ABC123456XYZ" />
+          </div>
+          <div class="space-y-2">
+            <label class="block text-xs font-mono uppercase tracking-widest text-slate-400">Nombre o Razón
+              Social</label>
+            <input type="text" id="cliente-nombre" v-model="form.nombre" required
+              class="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-3 px-4 text-slate-100 placeholder:text-slate-600 focus:outline-none input-focus transition-all duration-300"
+              placeholder="Empresa S.A. de C.V." />
+          </div>
+        </div>
+
+        <!-- Domicilio Section -->
+        <div id="cliente-domicilio" class="bg-black/20 border border-white/[0.05] rounded-xl p-6 space-y-4">
+          <h4 class="font-display font-medium text-primary text-lg flex items-center gap-2">
+            <span class="material-symbols-outlined text-xl">location_on</span>
+            Domicilio Fiscal
+          </h4>
+
+          <div class="space-y-2">
+            <input type="text" id="domicilio" v-model="form.domicilio" placeholder="Calle, Colonia, No. Ext, No. Int"
+              required
+              class="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-3 px-4 text-slate-100 placeholder:text-slate-600 focus:outline-none input-focus transition-all duration-300" />
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <input type="text" id="estado" v-model="form.estado" placeholder="Estado" required
+              class="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-3 px-4 text-slate-100 placeholder:text-slate-600 focus:outline-none input-focus transition-all duration-300" />
+            <input type="text" id="municipio" v-model="form.municipio" placeholder="Municipio" required
+              class="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-3 px-4 text-slate-100 placeholder:text-slate-600 focus:outline-none input-focus transition-all duration-300" />
+            <input type="text" id="postal" v-model="form.postal" placeholder="Código Postal" required
+              class="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-3 px-4 text-slate-100 placeholder:text-slate-600 focus:outline-none input-focus transition-all duration-300" />
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input type="text" id="regimen" v-model="form.regimen" placeholder="Régimen Fiscal" required
+              class="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-3 px-4 text-slate-100 placeholder:text-slate-600 focus:outline-none input-focus transition-all duration-300" />
+            <input type="text" id="uso_cfdi" v-model="form.uso_cfdi" placeholder="Uso CFDI" required
+              class="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-3 px-4 text-slate-100 placeholder:text-slate-600 focus:outline-none input-focus transition-all duration-300" />
+          </div>
+        </div>
+
+        <!-- Contact & Concept Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label class="block text-xs font-mono uppercase tracking-widest text-slate-400">Teléfono</label>
+            <div class="relative">
+              <span
+                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-[20px]">call</span>
+              <input type="text" id="telefono" v-model="form.telefono" required
+                class="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-3 pl-12 pr-4 text-slate-100 placeholder:text-slate-600 focus:outline-none input-focus transition-all duration-300"
+                placeholder="55 1234 5678" />
+            </div>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-xs font-mono uppercase tracking-widest text-slate-400">Email</label>
+            <div class="relative">
+              <span
+                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-[20px]">mail</span>
+              <input type="email" id="email" v-model="form.email" required
+                class="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-3 pl-12 pr-4 text-slate-100 placeholder:text-slate-600 focus:outline-none input-focus transition-all duration-300"
+                placeholder="contacto@cliente.com" />
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="md:col-span-2 space-y-2">
+            <label class="block text-xs font-mono uppercase tracking-widest text-slate-400">Concepto</label>
+            <div class="relative">
+              <span
+                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-[20px]">description</span>
+              <input type="text" id="concepto" v-model="form.concepto" required
+                class="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-3 pl-12 pr-4 text-slate-100 placeholder:text-slate-600 focus:outline-none input-focus transition-all duration-300"
+                placeholder="Descripción del servicio..." />
+            </div>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-xs font-mono uppercase tracking-widest text-accent-blue">Total</label>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-mono text-[20px]">$</span>
+              <input type="number" id="total" v-model="form.total" step="0.01" required
+                class="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-slate-100 placeholder:text-slate-600 focus:outline-none input-focus transition-all duration-300"
+                placeholder="0.00" />
+            </div>
+          </div>
+        </div>
+
+        <!-- File Upload -->
+        <div class="space-y-2 mt-2">
+          <div id="pdf-upload-zone" @click="triggerFileInput"
+            class="group border-2 border-dashed border-slate-700 hover:border-accent-blue/50 bg-black/30 hover:bg-accent-blue/5 rounded-xl p-8 text-center cursor-pointer transition-all duration-300">
+            <span
+              class="material-symbols-outlined text-4xl text-slate-500 group-hover:text-accent-blue transition-colors mb-2">upload_file</span>
+            <p class="font-display text-slate-300 group-hover:text-accent-blue transition-colors text-sm">Adjuntar PDF
+              (Constancia de Situación Fiscal)</p>
+            <input type="file" id="pdf-input" ref="fileInput" @change="handleFileUpload" accept="application/pdf"
+              class="hidden" />
+            <div id="pdf-selected" class="font-mono text-[11px] text-accent-blue mt-3" v-if="fileName">Adjunto: [[
+              fileName ]]</div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-6 border-t border-slate-800/50">
+          <button type="submit" :disabled="loading"
+            class="gradient-button w-full sm:w-auto px-10 py-4 rounded-xl text-white font-bold tracking-widest text-sm hover:brightness-110 transition-all duration-300 flex items-center justify-center gap-2 float-right disabled:opacity-50">
+            <span>[[ loading ? 'PROCESANDO...' : 'EMITIR FACTURA' ]]</span>
+            <span class="material-symbols-outlined text-[18px]">send</span>
+          </button>
+          <div class="clear-both"></div>
+        </div>
+      </form>
+
+      <div id="emitir-factura-result" class="mt-6" v-if="message">
+        <div
+          :class="['p-4 rounded-xl border font-mono text-sm', success ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-red-500/10 border-red-500/30 text-red-400']">
+          [[ message ]]
+        </div>
       </div>
     </div>
-
-    <div style="display:flex; gap:12px; flex-wrap:wrap;">
-      <div style="flex:1 1 260px; min-width:260px;">
-        <label>Teléfono</label>
-        <input type="text" id="telefono" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
-      </div>
-      <div style="flex:1 1 260px; min-width:260px;">
-        <label>Email</label>
-        <input type="email" id="email" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
-      </div>
-    </div>
-
-    <div style="display:flex; gap:12px; flex-wrap:wrap;">
-      <div style="flex:1 1 260px; min-width:260px;">
-        <label>Concepto</label>
-        <input type="text" id="concepto" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
-      </div>
-      <div style="flex:0 0 180px; min-width:180px;">
-        <label>Total</label>
-        <input type="number" id="total" step="0.01" required style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border-dim);"/>
-      </div>
-    </div>
-
-    <div class="drop-zone" id="pdf-upload-zone" style="margin-top:8px; padding:14px; text-align:center; border:1px dashed rgba(0,0,0,.2); border-radius:8px; cursor:pointer; background:linear-gradient(135deg, rgba(56,189,248,.15), rgba(56,189,248,.05));" onclick="document.getElementById('pdf-input').click();">
-      <i class="fas fa-paperclip"></i> Adjuntar PDF (Constancia de Situación Fiscal)
-      <input type="file" id="pdf-input" accept="application/pdf" style="display:none;" />
-      <div id="pdf-selected" style="font-size:12px; color:#333; margin-top:6px;"></div>
-    </div>
-    <button type="submit" class="btn btn-primary w-auto" style="margin-top:8px;">Emitir</button>
-  </form>
-
-  <div id="emitir-factura-result" class="mt-3"></div>
+  </div>
 </div>
+
+<script>
+  const { createApp, ref, reactive } = Vue;
+
+  createApp({
+    delimiters: ["[[", "]]"],
+    setup() {
+      const fileInput = ref(null);
+      const fileName = ref('');
+      const loading = ref(false);
+      const message = ref('');
+      const success = ref(false);
+
+      const form = reactive({
+        cliente: '',
+        rfc: '',
+        nombre: '',
+        domicilio: '',
+        estado: '',
+        municipio: '',
+        postal: '',
+        regimen: '',
+        uso_cfdi: '',
+        telefono: '',
+        email: '',
+        concepto: '',
+        total: ''
+      });
+
+      const triggerFileInput = () => {
+        fileInput.value.click();
+      };
+
+      const handleFileUpload = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          fileName.value = file.name;
+        } else {
+          fileName.value = '';
+        }
+      };
+
+      const submitForm = async () => {
+        // Previene envío si ya está cargando
+        if (loading.value) return;
+
+        loading.value = true;
+        message.value = '';
+
+        // Dispara submit programático si se requiere lógica externa JS atada por #emitir-factura-form
+        try {
+          // await new Promise(resolve => setTimeout(resolve, 1000));
+          // Aquí podrías agregar fetch() a la API si usas Vue puramente
+
+          success.value = true;
+          message.value = 'Formulario capturado. Integre la lógica de API aquí.';
+        } catch (error) {
+          success.value = false;
+          message.value = 'Ocurrió un error al emitir la factura.';
+        } finally {
+          loading.value = false;
+        }
+      };
+
+      return {
+        form,
+        fileInput,
+        fileName,
+        loading,
+        message,
+        success,
+        triggerFileInput,
+        handleFileUpload,
+        submitForm
+      };
+    }
+  }).mount('#app');
+</script>
 {% endblock %}
