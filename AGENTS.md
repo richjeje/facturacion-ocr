@@ -453,6 +453,32 @@ El remote (`origin/main`) tenía 14 commits nuevos con features de CFDI/CSF, nue
 - `docs/README.md` → descripción general → absorbida por sección «¿Qué es este proyecto?».
 - `frontend/static/js/README.md` → nota de directorio → sección «Frontend / UI».
 
+### Sesión 5 — Migración de index.html a Vue SPA (2026-03-02)
+
+**Situación encontrada:**
+- El archivo `frontend/templates/index.html` manejaba el inicio de sesión como una plantilla HTML autónoma usando Vue 3 vía CDN y Tailwind vía CDN.
+- Se requería migrar esta vista al nuevo proyecto frontend (Vue SFC con TypeScript y Composition API).
+
+**Acciones tomadas:**
+- Se migró el contenido de `frontend/templates/index.html` al componente SFC `frontend/facturacion ocr/src/views/iniciar_sesion.vue`.
+- Se reemplazaron los delimitadores adaptados para backend (`[[ ... ]]`) por la sintaxis estándar de Vue (`{{ ... }}`).
+- Se refactorizó la lógica en la sección `<script setup lang="ts">` importando Composition API nativa y aprovechando vue-router.
+- Se reemplazó la recarga completa (`window.location.href`) por la navegación en cliente (`router.push`) y los links nativos por `<router-link>`.
+- Se encapsularon los estilos CSS en `.glass-card` y condicionales auxiliares usando la directiva `<style scoped>`.
+
 ---
 
-_Última actualización: 2026-02-20_
+### Sesión 6 — Migración de signup.html a Vue SPA (2026-03-02)
+
+**Sitación encontrada:**
+- El archivo `frontend/templates/signup.html` manejaba el registro como una plantilla HTML autónoma usando Vue 3 y Tailwind vía CDN.
+- Se requería migrar esta vista a `registrarse.vue` en el nuevo proyecto de Vue.
+
+**Acciones tomadas:**
+- Se migró el contenido de `frontend/templates/signup.html` al componente SFC `frontend/facturacion ocr/src/views/registrarse.vue`.
+- Se reemplazaron los delimitadores adaptados para backend (`[[ ... ]]`) por la sintaxis estándar de Vue (`{{ ... }}`).
+- Se refactorizó la lógica en la sección `<script setup lang="ts">` importando la API nativa y aprovechando `vue-router`.
+- Se reemplazó la recarga local en la redirección por la navegación con `router.push('/iniciar-sesion')` y los enlaces con `<router-link>`.
+- Se añadieron estilos CSS locales en la directiva `<style scoped>`.
+
+_Última actualización: 2026-03-02_

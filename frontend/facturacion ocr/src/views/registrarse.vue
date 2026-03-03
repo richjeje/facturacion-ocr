@@ -1,0 +1,223 @@
+<template>
+  <div class="bg-background-dark text-slate-100 font-body min-h-screen flex items-center justify-center p-4 w-full">
+    <div class="w-full max-w-md">
+      <!-- Brand Logo Header -->
+      <div class="flex flex-col items-center mb-8">
+        <div class="flex items-center gap-3 mb-2">
+          <div class="p-2 rounded-lg bg-primary/10 border border-primary/20">
+            <span class="material-symbols-outlined text-primary text-3xl">document_scanner</span>
+          </div>
+          <h2 class="font-display text-2xl font-bold tracking-tight text-white">Facturación <span class="text-accent-blue">OCR</span></h2>
+        </div>
+        <div class="w-24 h-[3px] gradient-line rounded-full"></div>
+      </div>
+
+      <!-- Registration Card -->
+      <div class="bg-card-dark border border-white/[0.07] rounded-xl p-8 glow-surface">
+        <div class="mb-8">
+          <h1 class="font-heading text-5xl tracking-wider text-white mb-2">REGISTRO</h1>
+          <p class="text-slate-400 text-sm">Únete a la elite de facturación inteligente</p>
+        </div>
+
+        <div v-if="successMsg" class="mb-4 bg-green-500/20 border border-green-500/50 text-green-400 text-sm p-3 rounded-lg">
+          {{ successMsg }}
+        </div>
+        <div v-if="errorMsg" class="mb-4 bg-red-500/20 border border-red-500/50 text-red-400 text-sm p-3 rounded-lg">
+          {{ errorMsg }}
+        </div>
+
+        <!-- Role Selection -->
+        <div class="flex p-1 bg-black/40 rounded-lg border border-white/[0.05] mb-8">
+          <label class="flex-1 cursor-pointer">
+            <input type="radio" name="role" value="cliente" v-model="tab" class="hidden peer" />
+            <div class="text-center py-2.5 rounded-md cursor-pointer transition-all peer-checked:bg-primary peer-checked:text-white text-slate-400 font-semibold text-sm">
+              Cliente
+            </div>
+          </label>
+          <label class="flex-1 cursor-pointer">
+            <input type="radio" name="role" value="negocio" v-model="tab" class="hidden peer" />
+            <div class="text-center py-2.5 rounded-md cursor-pointer transition-all peer-checked:bg-accent-blue peer-checked:text-white text-slate-400 font-semibold text-sm">
+              Negocio
+            </div>
+          </label>
+        </div>
+
+        <!-- Formulario Cliente -->
+        <form v-if="tab === 'cliente'" @submit.prevent="registerCliente" class="space-y-5">
+          <!-- Username -->
+          <div class="space-y-2">
+            <label class="block text-left text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Usuario</label>
+            <div class="relative flex items-center group input-focus-glow rounded-lg border border-white/[0.1] bg-black/20 transition-all">
+              <input v-model="cForm.username" class="w-full bg-transparent border-none focus:ring-0 py-4 px-4 text-white font-mono placeholder:text-slate-600" placeholder="Introduce tu nombre de usuario" type="text" required />
+              <span class="material-symbols-outlined text-slate-500 pr-4 group-focus-within:text-primary transition-colors">person</span>
+            </div>
+          </div>
+          <!-- Email -->
+          <div class="space-y-2">
+            <label class="block text-left text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Email</label>
+            <div class="relative flex items-center group input-focus-glow rounded-lg border border-white/[0.1] bg-black/20 transition-all">
+              <input v-model="cForm.email" class="w-full bg-transparent border-none focus:ring-0 py-4 px-4 text-white font-mono placeholder:text-slate-600" placeholder="tu@email.tech" type="email" required />
+              <span class="material-symbols-outlined text-slate-500 pr-4 group-focus-within:text-primary transition-colors">alternate_email</span>
+            </div>
+          </div>
+          <!-- Password -->
+          <div class="space-y-2">
+            <label class="block text-left text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Contraseña</label>
+            <div class="relative flex items-center group input-focus-glow rounded-lg border border-white/[0.1] bg-black/20 transition-all">
+              <input v-model="cForm.password" class="w-full bg-transparent border-none focus:ring-0 py-4 px-4 text-white font-mono placeholder:text-slate-600" placeholder="••••••••" type="password" required />
+              <span class="material-symbols-outlined text-slate-500 pr-4 group-focus-within:text-primary transition-colors">lock</span>
+            </div>
+          </div>
+          <!-- Submit Button -->
+          <button :disabled="loading" class="w-full btn-gradient hover:opacity-90 text-white font-bold py-4 rounded-lg mt-4 shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 group disabled:opacity-50" type="submit">
+            <span>{{ loading ? 'REGISTRANDO...' : 'REGISTRAR' }}</span>
+            <span v-if="!loading" class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+          </button>
+        </form>
+
+        <!-- Formulario Negocio -->
+        <form v-if="tab === 'negocio'" @submit.prevent="registerNegocio" class="space-y-5">
+          <!-- Suggested Username -->
+          <div class="space-y-2">
+            <label class="block text-left text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Usuario sugerido</label>
+            <div class="relative flex items-center group input-focus-glow-secondary rounded-lg border border-white/[0.1] bg-black/20 transition-all">
+              <input v-model="nForm.username" class="w-full bg-transparent border-none focus:ring-0 py-4 px-4 text-white font-mono placeholder:text-slate-600" placeholder="nombre_negocio" type="text" required />
+              <span class="material-symbols-outlined text-slate-500 pr-4 group-focus-within:text-accent-blue transition-colors">badge</span>
+            </div>
+          </div>
+          <!-- Business Name -->
+          <div class="space-y-2">
+            <label class="block text-left text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Nombre del Negocio</label>
+            <div class="relative flex items-center group input-focus-glow-secondary rounded-lg border border-white/[0.1] bg-black/20 transition-all">
+              <input v-model="nForm.business_name" class="w-full bg-transparent border-none focus:ring-0 py-4 px-4 text-white font-mono placeholder:text-slate-600" placeholder="Empresa S.A." type="text" required />
+              <span class="material-symbols-outlined text-slate-500 pr-4 group-focus-within:text-accent-blue transition-colors">domain</span>
+            </div>
+          </div>
+          <!-- RFC -->
+          <div class="space-y-2">
+            <label class="block text-left text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">RFC</label>
+            <div class="relative flex items-center group input-focus-glow-secondary rounded-lg border border-white/[0.1] bg-black/20 transition-all">
+              <input v-model="nForm.rfc" class="w-full bg-transparent border-none focus:ring-0 py-4 px-4 text-white font-mono placeholder:text-slate-600" placeholder="ABC123456XYZ" type="text" required />
+              <span class="material-symbols-outlined text-slate-500 pr-4 group-focus-within:text-accent-blue transition-colors">fingerprint</span>
+            </div>
+          </div>
+          <!-- Contact Email -->
+          <div class="space-y-2">
+            <label class="block text-left text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Email de contacto</label>
+            <div class="relative flex items-center group input-focus-glow-secondary rounded-lg border border-white/[0.1] bg-black/20 transition-all">
+              <input v-model="nForm.email" class="w-full bg-transparent border-none focus:ring-0 py-4 px-4 text-white font-mono placeholder:text-slate-600" placeholder="contacto@negocio.com" type="email" required />
+              <span class="material-symbols-outlined text-slate-500 pr-4 group-focus-within:text-accent-blue transition-colors">alternate_email</span>
+            </div>
+          </div>
+
+          <p class="text-[10px] text-slate-500 italic mt-2 leading-relaxed">
+            * Las cuentas de negocio requieren aprobación del administrador. Una vez aprobada, recibirás tus credenciales por correo.
+          </p>
+
+          <!-- Submit Button -->
+          <button :disabled="loading" class="w-full btn-gradient hover:opacity-90 text-white font-bold py-4 rounded-lg mt-4 shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 group text-sm disabled:opacity-50" type="submit">
+            <span>{{ loading ? 'SOLICITANDO...' : 'SOLICITAR REGISTRO DE NEGOCIO' }}</span>
+            <span v-if="!loading" class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward</span>
+          </button>
+        </form>
+
+        <!-- Footer Link -->
+        <div class="mt-8 text-center">
+          <p class="text-slate-500 text-sm">
+            ¿Ya tienes cuenta?
+            <router-link to="/" class="text-accent-blue hover:text-accent-blue/80 font-semibold transition-colors ml-1">Inicia Sesión</router-link>
+          </p>
+        </div>
+      </div>
+
+      <!-- Decorative elements -->
+      <div class="mt-8 flex justify-center gap-4 opacity-30">
+        <span class="material-symbols-outlined text-slate-400 text-xs">shield_lock</span>
+        <span class="material-symbols-outlined text-slate-400 text-xs">verified_user</span>
+        <span class="material-symbols-outlined text-slate-400 text-xs">security</span>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
+
+const tab = ref('cliente');
+const loading = ref(false);
+const errorMsg = ref('');
+const successMsg = ref('');
+
+const cForm = reactive({ username: '', email: '', password: '' });
+const nForm = reactive({ username: '', business_name: '', rfc: '', email: '' });
+
+const registerCliente = async () => {
+  loading.value = true;
+  errorMsg.value = '';
+  successMsg.value = '';
+  try {
+    const res = await fetch(`/api/register/cliente?username=${cForm.username}&email=${cForm.email}&password=${cForm.password}`, { method: 'POST' });
+    const data = await res.json();
+    if (res.ok) {
+      successMsg.value = data.message + '. Redirigiendo...';
+      setTimeout(() => router.push('/iniciar-sesion'), 2000);
+    } else {
+      errorMsg.value = data.detail || 'Error en el registro';
+    }
+  } catch (e) {
+    errorMsg.value = 'Error de conexión';
+  } finally {
+    loading.value = false;
+  }
+};
+
+const registerNegocio = async () => {
+  loading.value = true;
+  errorMsg.value = '';
+  successMsg.value = '';
+  try {
+    const res = await fetch(`/api/register/negocio?username=${nForm.username}&email=${nForm.email}&business_name=${nForm.business_name}&rfc=${nForm.rfc}`, { method: 'POST' });
+    const data = await res.json();
+    if (res.ok) {
+      successMsg.value = data.message;
+      nForm.username = '';
+      nForm.business_name = '';
+      nForm.rfc = '';
+      nForm.email = '';
+    } else {
+      errorMsg.value = data.detail || 'Error en el registro';
+    }
+  } catch (e) {
+    errorMsg.value = 'Error de conexión';
+  } finally {
+    loading.value = false;
+  }
+};
+</script>
+
+<style scoped>
+.glow-surface {
+  box-shadow: 0 0 40px rgba(149, 81, 251, 0.1);
+}
+
+.input-focus-glow:focus-within {
+  box-shadow: 0 0 15px rgba(149, 81, 251, 0.3);
+  border-color: #9551fb;
+}
+
+.input-focus-glow-secondary:focus-within {
+  box-shadow: 0 0 15px rgba(77, 159, 255, 0.3);
+  border-color: #4d9fff;
+}
+
+.gradient-line {
+  background: linear-gradient(90deg, #9551fb 0%, #4d9fff 100%);
+}
+
+.btn-gradient {
+  background: linear-gradient(135deg, #9551fb 0%, #4d9fff 100%);
+}
+</style>

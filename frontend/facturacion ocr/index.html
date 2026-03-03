@@ -1,13 +1,54 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>facturacion-ocr</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+<html lang="es" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Facturación OCR</title>
+
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#9551fb",
+            "accent-blue": "#4d9fff",
+            "background-light": "#f7f5f8",
+            "background-dark": "#050508",
+            "card-dark": "#0d0d14",
+          },
+          fontFamily: {
+            "display": ["Space Grotesk", "sans-serif"],
+            "heading": ["Bebas Neue", "cursive"],
+            "body": ["DM Sans", "sans-serif"],
+            "mono": ["Space Mono", "monospace"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+
+  <!-- Google Fonts & Material Symbols -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Bebas+Neue&family=DM+Sans:wght@400;500;700&family=Space+Mono&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+</head>
+
+<body class="bg-background-dark font-body text-slate-100 min-h-screen">
+  <div id="app" class="w-full"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
 </html>
