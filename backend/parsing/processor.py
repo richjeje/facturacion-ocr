@@ -2,7 +2,7 @@ import re
 import logging
 from typing import Optional, Dict, Any
 from fuzzywuzzy import fuzz
-from core.config import (
+from backend.core.config import (
     EMPRESAS_CONOCIDAS,
     obtener_empresas_por_clasificacion,
     REGEX_FECHAS,
@@ -13,7 +13,7 @@ from core.config import (
     REGEX_SUBTOTALS,
     REGEX_TOTALS,
 )
-from core.utils import (
+from backend.core.utils import (
     clean_date,
     clean_amount,
     convertir_fecha_texto,
@@ -225,14 +225,14 @@ def process_invoice_text(texto: str, metodo_extraccion: str) -> Optional[Dict[st
     )
 
     return {
-        "Fecha": fecha,
-        "Proveedor": proveedor,
-        "Concepto": tipo,
-        "Folio": folio,
-        "Subtotal": subtotal,
-        "IVA": iva,
-        "Total": total,
-        "Metodo_Extraccion": metodo_extraccion,
-        "Confianza_Proveedor": max_ratio,
-        "URL": url,
+        "issued_date": fecha,
+        "supplier_name": proveedor,
+        "concept": tipo,
+        "invoice_number": folio,
+        "subtotal": subtotal,
+        "tax_iva": iva,
+        "total": total,
+        "extraction_method": metodo_extraccion,
+        "supplier_confidence": max_ratio,
+        "extra": {"url": url},
     }

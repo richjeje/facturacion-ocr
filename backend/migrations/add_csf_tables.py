@@ -125,7 +125,7 @@ if __name__ == "__main__":
     import sys
     import os
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from core.database import engine
+    from backend.core.database import engine
     
     print("🔄 Ejecutando migración de CSF...")
     upgrade_csf_tables(engine)

@@ -7,17 +7,17 @@ import shutil
 import logging
 import concurrent.futures
 
-from core.database import Base, engine
-from core.persistence import save_to_database
-from ocr.extractor import extract_text
-from parsing.processor import process_invoice_text
-from core.utils import (
+from backend.core.database import Base, engine
+from backend.core.persistence import save_to_database
+from backend.ocr.extractor import extract_text
+from backend.parsing.processor import process_invoice_text
+from backend.core.utils import (
     ordenar_facturas_por_fecha,
     ExtractionError,
     ProcessingError,
     ValidationError,
 )
-from core.config import setup_logging
+from backend.core.config import setup_logging
 
 
 

@@ -10,13 +10,13 @@ from typing import Dict, List, Optional
 import json
 from datetime import datetime, date
 
-from core.database import get_db
-from core.cfdi_models import CSFRecord, CSFValidationCache, CSFHistory
-from core.models import User
-from core.csf_validator import CSFValidator
-from core.csf_generator import CSFGenerator, CSFConfig
-from core.feature_flags import FeatureFlags, get_user_settings
-from app.auth import get_current_user
+from backend.core.database import get_db
+from backend.core.cfdi_models import CSFRecord, CSFValidationCache, CSFHistory
+from backend.core.models import User
+from backend.core.csf_validator import CSFValidator
+from backend.core.csf_generator import CSFGenerator, CSFConfig
+from backend.core.feature_flags import FeatureFlags, get_user_settings
+from backend.app.auth import get_current_user
 import logging
 
 logger = logging.getLogger(__name__)
@@ -434,7 +434,7 @@ async def get_regimenes_fiscales(current_user: User = Depends(get_current_user))
         if not feature_flags.is_enabled(CSF_FEATURE):
             raise HTTPException(status_code=403, detail="Módulo CSF no habilitado")
         
-        from core.csf_validator import CATALOGO_REGIMENES_FISCALES
+        from backend.core.csf_validator import CATALOGO_REGIMENES_FISCALES
         
         return {
             "success": True,
@@ -456,7 +456,7 @@ async def enable_csf_feature(
         if current_user.role != "admin":
             raise HTTPException(status_code=403, detail="Solo administradores pueden habilitar features")
         
-        from core.feature_flags import FeatureFlags
+        from backend.core.feature_flags import FeatureFlags
         
         user_settings = get_user_settings(current_user.id)
         feature_flags = FeatureFlags(user_settings)

@@ -84,7 +84,7 @@ async def get_user_features():
     return {
         "cfdi_generation_enabled": True,
         "cfdi_timbrado_enabled": False,  # Default: modo prueba
-        "cfdi_cert_upload_enabled": True
+        "cfdi_cert_upload_enabled": True,
         "cfdi_sandbox_mode": True
     }
 

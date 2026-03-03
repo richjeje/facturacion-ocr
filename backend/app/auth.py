@@ -12,11 +12,11 @@ import os
 # Security
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
 ALGORITHM = "HS256"
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 # Database dependency
-from core.database import get_db
-from core.models import User
+from backend.core.database import get_db
+from backend.core.models import User
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
