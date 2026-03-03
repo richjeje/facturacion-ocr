@@ -26,3 +26,6 @@ python-dotenv
 pyjwt
 PyPDF2
 cryptography
+fuzzywuzzy
+python-Levenshtein
+qrcode[pil]
