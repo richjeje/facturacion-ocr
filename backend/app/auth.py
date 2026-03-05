@@ -16,7 +16,7 @@ security = HTTPBearer(auto_error=False)
 
 # Database dependency
 from backend.core.database import get_db
-from backend.core.models import User
+from backend.core.all_models import User
 
 def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),

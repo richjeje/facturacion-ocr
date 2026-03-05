@@ -12,7 +12,7 @@ from datetime import datetime, date
 
 from backend.core.database import get_db
 from backend.core.cfdi_models import CSFRecord, CSFValidationCache, CSFHistory
-from backend.core.models import User
+from backend.core.all_models import User
 from backend.core.csf_validator import CSFValidator
 from backend.core.csf_generator import CSFGenerator, CSFConfig
 from backend.core.feature_flags import FeatureFlags, get_user_settings

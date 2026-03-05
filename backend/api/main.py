@@ -41,7 +41,7 @@ from sqlalchemy.orm import Session
 
 from backend.core.config import setup_logging
 from backend.core.database import Base, SessionLocal, engine
-from backend.core.models import APIKey, Invoice, User
+from backend.core.all_models import APIKey, Invoice, User
 from backend.worker.tasks import process_file_task
 
 # Import routers from backend.app

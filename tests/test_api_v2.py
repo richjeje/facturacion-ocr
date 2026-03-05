@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from backend.app.main import app, get_db
 from backend.core.database import Base
-from backend.core.models import User, APIKey, Invoice
+from backend.core.all_models import User, APIKey, Invoice
 import jwt
 import json
 from unittest.mock import patch, MagicMock

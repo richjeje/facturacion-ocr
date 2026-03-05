@@ -5,7 +5,7 @@ from backend.cfdi.certificates import CertificateManager
 from backend.cfdi.validator import CFDIValidator
 from backend.core.database import Base
 from backend.core.cfdi_models import CFDICatalog, CFDICertificate
-from backend.core.models import User
+from backend.core.all_models import User
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from cryptography.fernet import Fernet

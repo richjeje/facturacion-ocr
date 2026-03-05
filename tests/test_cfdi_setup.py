@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from backend.core.database import Base
 from backend.core.cfdi_models import CFDICertificate, CFDIInvoice, CFDICatalog, CFDISettings
 from backend.core.feature_flags import FeatureFlags
-from backend.core.models import User
+from backend.core.all_models import User
 
 # Setup in-memory DB
 engine = create_engine("sqlite:///:memory:")

@@ -13,7 +13,7 @@ from datetime import datetime
 
 from backend.core.database import get_db
 from backend.core.profile_models import CSFDocument, CSFProfileHistory
-from backend.core.models import User
+from backend.core.all_models import User
 from backend.parsing.csf_parser import CSFParser
 from backend.app.auth import get_current_user
 import logging
