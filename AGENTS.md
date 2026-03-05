@@ -481,4 +481,77 @@ El remote (`origin/main`) tenía 14 commits nuevos con features de CFDI/CSF, nue
 - Se reemplazó la recarga local en la redirección por la navegación con `router.push('/iniciar-sesion')` y los enlaces con `<router-link>`.
 - Se añadieron estilos CSS locales en la directiva `<style scoped>`.
 
-_Última actualización: 2026-03-02_
+---
+
+### Sesión 7 — Migración de admin_dashboard.html a Vue SPA (2026-03-03)
+
+**Situación encontrada:**
+- El archivo `frontend/templates/admin_dashboard.html` manejaba el panel de administración como una vista autónoma. Se necesitaba mover a `admin_dashboard.vue` para continuar con la adopción completa del framework Vue 3.
+
+**Acciones tomadas:**
+- Se migró el contenido HTML al componente Vue `<template>`, y se reemplazaron los engarces de datos (`[[ ]]` a `{{ }}`).
+- Se refactorizó la lógica de control a Composition API bajo `<script setup lang="ts">`.
+- Las fuentes personalizadas y estilos (fuentes, glass-card, utilidades generadas) se importaron directamente en un `<style scoped>`.
+- Se implementaron las navegaciones entre vistas con `<router-link>`.
+
+### Sesión 8 — Migración de business_profile.html a Vue SPA (2026-03-03)
+
+**Situación encontrada:**
+- El archivo `frontend/templates/business_profile.html` manejaba el perfil de negocio y la subida de Constancias de Situación Fiscal (CSF) de forma autónoma con Jinja2, Tailwind vía CDN y JS inline.
+- Se requería migrar esta vista al componente Vue `business_profile.vue` preservando todas las variables visuales, fuentes y clases CSS de utilidad.
+
+**Acciones tomadas:**
+- Se migró toda la estructura a `frontend/facturacion ocr/src/views/business_profile.vue`.
+- Se reimplementaron las utilidades exclusivas de Tailwind definidas en la cabecera original del HTML (`colors: primary, charcoal` etc.) con clases aplicables directamente en el bloque `<style scoped>`, así como las fuentes `Sora`, `Bebas Neue` y `Space Mono`.
+- La lógica de subida y lectura provista antes por un archivo JS nativo fue abstraída directamente a Composition API simulando el backend original para cargar los datos en tabla dinámicamente y mostrar el modal del _preview_ del CSF con barra fluida.
+
+### Sesión 9 — Migración de config_perfil.html a Vue SPA (2026-03-03)
+
+**Situación encontrada:**
+- El archivo `frontend/templates/config_perfil.html` manejaba el perfil de configuración de forma autónoma con Jinja2, Tailwind vía CDN y estilos nativos.
+- Se requería migrar esta vista al componente Vue `config_perfil.vue` preservando todas las variables visuales, fuentes y estilos neon/gradient.
+
+**Acciones tomadas:**
+- Se migró toda la estructura a `frontend/facturacion ocr/src/views/config_perfil.vue`.
+- Se reimplementaron las utilidades exclusivas de estilos (como `neon-border`, `gradient-btn`, fuentes personalizadas como `Sora`, `Bebas Neue`, etc.) con un bloque `<style scoped>`.
+- El manejo del formulario en Jinja (`{{ user.business_name }}`) fue adaptado a propiedades reactivas con Vue `reactive()` y enlazadas a los campos con directivas `v-model`. 
+- Se establecieron las acciones de clic de los botones (e.g. `resetForm`, `saveProfile`, navegación vía `vue-router`).
+
+### Sesión 10 — Migración de negocio_emitir_factura.html a Vue SPA (2026-03-03)
+
+**Situación encontrada:**
+- El archivo `frontend/templates/negocio_emitir_factura.html` manejaba el formulario de emisión de factura de forma autónoma con Jinja2, Tailwind vía CDN y Vue 3 vía CDN.
+- Se requería migrar esta vista al componente Vue `negocio_emitir_factura.vue` en el proyecto SPA, preservando estilos y fuentes personalizadas.
+
+**Acciones tomadas:**
+- Se migró toda la estructura a `frontend/facturacion ocr/src/views/negocio_emitir_factura.vue`.
+- Se transpiló la lógica de Options API basada en CDN hacia Composition API usando `<script setup lang="ts">`.
+- Las configuraciones custom de Tailwind se adaptaron a variables de estilos aplicadas a clases dentro del bloque `<style scoped>`.
+- Las llamadas de Jinja (`[[ ]]`) se convirtieron a la interpolación habitual de Vue (`{{ }}`).
+
+### Sesión 11 — Migración de negocio_facturar_gastos.html a Vue SPA (2026-03-03)
+
+**Situación encontrada:**
+- El archivo `frontend/templates/negocio_facturar_gastos.html` manejaba el facturador de gastos de forma autónoma con Jinja2, Tailwind vía CDN y Vue 3 vía CDN.
+- Se requería migrar esta vista al componente Vue `negocio_facturar_gastos.vue` en el proyecto SPA, asegurando compatibilidad completa con el framework Vue y Tailwind preconfigurado, además de mantener fuentes.
+
+**Acciones tomadas:**
+- Se migró toda la estructura a `frontend/facturacion ocr/src/views/negocio_facturar_gastos.vue`.
+- Se transpiló la lógica adaptada con Options API y `createApp` basada en CDN a Composition API usando `<script setup lang="ts">` importando propiedades como `ref` y `reactive` para mantener la reactividad en el progreso de OCR.
+- Los estilos y fuentes personalizadas (`Bebas Neue`, `Space Grotesk`, `Space Mono`) así como clases custom que hacían override fueron aplicados directamente en etiquetas o como clases dentro del bloque `<style scoped>`. Clases personalizadas de Tailwind (`bg-background-dark`, `border-border-dark`) fueron reemplazadas en línea por sintaxis de valor arbitrario (`bg-[#050508]`, `border-[#1f1f2e]`) para mantener su exactitud de colores.
+- Las interpolaciones originadas de Jinja (`[[ ]]`) se convirtieron a convenciones estandarizadas de Vue (`{{ }}`).
+
+### Sesión 12 — Migración de negocio_mis_clientes.html a Vue SPA con diseño Stitch (2026-03-03)
+
+**Situación encontrada:**
+- Se proporcionó un diseño en Stitch (ID: 311803ef9acf4939a92ca968ff2e14d7) para la vista "Mis Clientes".
+- Era necesario implementar este diseño exacto en el componente Vue `negocio_mis_clientes.vue` de la SPA, preservando la paleta de colores, gradientes, tipografías personalizadas (`Space Grotesk`, `Bebas Neue`, `Space Mono`) y estilos.
+
+**Acciones tomadas:**
+- Se descargó el código fuente HTML/CSS del mock generado por Stitch.
+- Se migró toda la estructura y la tabla de clientes a `frontend/facturacion ocr/src/views/negocio_mis_clientes.vue`.
+- La lógica de renderización estática para iterar clientes se movió a variables reactivas utilizando Composition API bajo `<script setup lang="ts">` importando la función `ref` y usando un bucle `v-for`.
+- Las utilidades personalizadas de Tailwind definidas en la configuración del diseño (e.g., .text-primary, gradientes custom, configuraciones dark-mode) fueron transcritas a CSS puro dentro de un bloque `<style scoped>` del componente.
+- Los iconos, navegaciones con Vue Router y fuentes fueron referenciados explícitamente para mantener total fidelidad con la interfaz visual.
+
+_Última actualización: 2026-03-03_

@@ -43,7 +43,7 @@
               <div class="relative">
                 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-[20px]">lock</span>
                 <input v-model="password" :type="showPassword ? 'text' : 'password'" required class="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-4 pl-12 pr-12 text-slate-100 placeholder:text-slate-600 focus:outline-none input-focus transition-all duration-300" placeholder="••••••••" />
-                <button @click.prevent="showPassword = !showPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors" type="button">
+                <button @click.prevent="showPassword = !showPassword" class="absolute right-1 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors" type="button">
                   <span class="material-symbols-outlined text-[20px]">{{ showPassword ? 'visibility_off' : 'visibility' }}</span>
                 </button>
               </div>
