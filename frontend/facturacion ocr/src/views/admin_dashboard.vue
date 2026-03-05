@@ -1,6 +1,8 @@
 <template>
-<div class="admin-dashboard-container bg-background-dark text-high-text min-h-screen py-10 px-6" style="background-color: #050508; color: #f0f0f5;">
-    <div class="max-w-6xl w-full mx-auto">
+<div class="admin-dashboard-container bg-background-dark text-high-text h-screen overflow-hidden flex" style="background-color: #050508; color: #f0f0f5;">
+    <Navbar />
+    <main class="flex-1 overflow-y-auto py-10 px-6">
+        <div class="max-w-6xl w-full mx-auto">
         <!-- Breadcrumb & Top Bar -->
         <header class="flex items-center justify-between mb-12">
             <div class="flex items-center gap-2 text-xs uppercase tracking-widest text-muted-text data-font text-[#6b6b80]">
@@ -132,7 +134,8 @@
                 </div>
             </div>
         </div>
-    </div>
+        </div>
+    </main>
 
     <!-- Modal de Aprobación (Vue Controlled) -->
     <div v-if="showModal"
@@ -173,6 +176,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import Navbar from '../components/navbar.vue';
 
 const pendingUsers = ref<any[]>([]);
 const loading = ref(true);

@@ -13,9 +13,9 @@
             <span class="text-sm font-medium" :class="{'font-bold': $route.path === '/emitir-factura'}">Emitir Factura</span>
           </router-link>
           
-          <router-link to="/dashboard" active-class="sidebar-active !text-white shadow-lg shadow-primary/20" class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors group">
-            <span class="material-symbols-outlined text-xl group-hover:text-primary" :class="{'text-white': $route.path === '/dashboard'}">visibility</span>
-            <span class="text-sm font-medium" :class="{'font-bold': $route.path === '/dashboard'}">Facturación OCR</span>
+          <router-link to="/admin" active-class="sidebar-active !text-white shadow-lg shadow-primary/20" class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors group">
+            <span class="material-symbols-outlined text-xl group-hover:text-primary" :class="{'text-white': $route.path === '/admin'}">visibility</span>
+            <span class="text-sm font-medium" :class="{'font-bold': $route.path === '/admin'}">Facturación OCR</span>
           </router-link>
           
           <router-link to="/mis-facturas" active-class="sidebar-active !text-white shadow-lg shadow-primary/20" class="flex items-center gap-3 px-3 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors group">

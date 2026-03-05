@@ -1,6 +1,5 @@
 <template>
-  <div class="app-container font-display text-slate-100 bg-[#050508] selection:bg-primary/30">
-    <div class="flex min-h-screen">
+  <div class="app-container font-display text-slate-100 bg-[#050508] selection:bg-primary/30 h-screen overflow-hidden flex">
       <!-- Sidebar -->
       <navbar />
       
@@ -133,7 +132,6 @@
           </div>
         </footer>
       </main>
-    </div>
   </div>
 </template>
 

@@ -1,6 +1,8 @@
 <template>
-<div class="font-sora min-h-[calc(100vh-64px)] overflow-y-auto bg-background-dark text-slate-100 p-8">
-  <div class="max-w-5xl mx-auto space-y-8">
+<div class="font-sora h-screen overflow-hidden bg-background-dark text-slate-100 flex">
+  <Navbar />
+  <main class="flex-1 overflow-y-auto p-8">
+    <div class="max-w-5xl mx-auto space-y-8">
 
     <!-- Header Section -->
     <header class="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -149,12 +151,14 @@
       </div>
     </div>
 
-  </div>
+    </div>
+  </main>
 </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
+import Navbar from '../components/navbar.vue';
 
 const fileInput = ref<HTMLInputElement | null>(null);
 

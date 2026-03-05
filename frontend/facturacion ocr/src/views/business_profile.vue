@@ -1,6 +1,8 @@
 <template>
-<div class="bg-background-dark text-slate-100 font-display min-h-screen pt-10 px-8 pb-20 root-container">
-    <div class="max-w-6xl w-full mx-auto">
+<div class="bg-background-dark text-slate-100 font-display h-screen overflow-hidden flex root-container">
+    <Navbar />
+    <main class="flex-1 overflow-y-auto pt-10 px-8 pb-20">
+        <div class="max-w-6xl w-full mx-auto">
 
         <div class="flex flex-wrap items-end justify-between gap-4 mb-8">
             <div>
@@ -151,7 +153,8 @@
                 </div>
             </div>
         </div>
-    </div>
+        </div>
+    </main>
 
     <!-- Modal de Preview y Edición CSF -->
     <div v-if="showPreviewModal" class="csf-preview-modal fixed inset-0 z-[9999] flex items-center justify-center p-4">
@@ -252,6 +255,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import Navbar from '../components/navbar.vue';
 
 const user = ref({
     id: '',

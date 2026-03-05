@@ -1,10 +1,12 @@
 <template>
-  <div class="bg-background-dark font-body text-slate-100 min-h-screen p-6 relative overflow-hidden flex justify-center">
+  <div class="bg-background-dark font-body text-slate-100 h-screen overflow-hidden flex relative">
+    <Navbar />
     <!-- Background Decoration Elements -->
-    <div class="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
-    <div class="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-blue/10 rounded-full blur-[120px] pointer-events-none"></div>
+    <div class="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] pointer-events-none z-0"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-blue/10 rounded-full blur-[120px] pointer-events-none z-0"></div>
 
-    <div class="w-full max-w-4xl z-10 space-y-8 mt-10">
+    <main class="flex-1 overflow-y-auto flex justify-center p-6 z-10">
+      <div class="w-full max-w-4xl space-y-8 mt-10">
       <!-- Header -->
       <div class="mb-4 text-center md:text-left">
         <h1 class="font-heading text-5xl tracking-wider text-slate-100 mb-2">EMITIR FACTURA</h1>
@@ -116,12 +118,14 @@
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </main>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
+import Navbar from '../components/navbar.vue';
 
 const fileInput = ref<HTMLInputElement | null>(null);
 const fileName = ref('');

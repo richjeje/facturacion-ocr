@@ -1,6 +1,8 @@
 <template>
-<div class="bg-[#050508] text-slate-100 font-display min-h-screen py-10 px-6">
-  <div class="max-w-6xl w-full mx-auto">
+<div class="bg-[#050508] text-slate-100 font-display h-screen overflow-hidden flex">
+  <Navbar />
+  <main class="flex-1 overflow-y-auto py-10 px-6">
+    <div class="max-w-6xl w-full mx-auto">
     <div class="mb-10 text-center md:text-left">
       <h2 class="font-heading text-6xl text-white tracking-wide uppercase">Facturar Gastos</h2>
       <p class="text-slate-400 text-lg mt-2">Sube el ticket y el OCR extraerá los datos automáticamente.</p>
@@ -213,12 +215,14 @@
         </div>
       </div>
     </div>
-  </div>
+    </div>
+  </main>
 </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue';
+import Navbar from '../components/navbar.vue';
 
 const fileInput = ref<HTMLInputElement | null>(null);
 const file = ref<File | null>(null);
